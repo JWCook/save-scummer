@@ -8,7 +8,7 @@ I made this because I enjoy roguelike/rogue-lite games, but when I inevitably fi
 I often resort to working around the permadeath mechanic by
 [save-scumming](https://tvtropes.org/pmwiki/pmwiki.php/Main/SaveScumming).
 I then found myself wasting precious _seconds_ of time copying save files back and forth,
-so I decided to waste hours automating it instead!
+so I decided to waste hours (semi-)automating it instead!
 
 ## Features
 None!
@@ -20,7 +20,7 @@ pip install https://github.com/JWCook/save-scummer
 ```
 
 ## Usage
-Save-scummer provides the command `ssc` with the following options:
+Save-scummer provides the command `save-scummer` (also aliased as `ssc`) with the following subcommands:
 
 ```
 Usage: ssc COMMAND [ARGS]...

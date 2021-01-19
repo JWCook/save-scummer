@@ -1,15 +1,16 @@
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Tuple, Union
+from typing import Any, Dict, Tuple
 
 import yaml
 from appdirs import user_data_dir
+
+from save_scummer.utils import get_latest_modified, normalize_path
 
 DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
 CONFIG_PATH = DATA_DIR.joinpath('config.yml')
 DEFAULT_BACKUP_DIR = DATA_DIR.joinpath('backups')
 DEFAULT_CONFIG = {'games': {}}
-
-StrOrPath = Union[Path, str]
 
 
 def add_game(game: str, source_path: str):
@@ -18,15 +19,9 @@ def add_game(game: str, source_path: str):
     write_config(config)
 
 
-# TODO: Add more formatting as more values are added
-def list_games() -> Dict[str, Any]:
-    return read_config()['games']
-
-
-# TODO: Add secondary cloud storage sync dir
-def get_game_dirs(game: str) -> Tuple[Path, Path]:
+def get_game_dirs(game: str, config: Dict = None) -> Tuple[Path, Path]:
     """Get the source and backup directories for the given game"""
-    config = read_config()
+    config = config or read_config()
     source_dir = config['games'].get(game).get('source')
     if not source_dir:
         raise ValueError(f'Game {game} not configured')
@@ -41,6 +36,11 @@ def get_game_dirs(game: str) -> Tuple[Path, Path]:
     return normalize_path(source_dir), normalize_path(backup_dir)
 
 
+def list_games() -> Dict[str, Any]:
+    config = read_config()
+    return config['games']
+
+
 def read_config() -> Dict[str, Any]:
     """Read config from the config file"""
     if not CONFIG_PATH.is_file():
@@ -50,11 +50,15 @@ def read_config() -> Dict[str, Any]:
         return yaml.safe_load(f)
 
 
+def update_metadata(game: str, last_save_time: datetime):
+    """Store metadata for a given game on the date/time of the last save (source) and backup"""
+    config = read_config()
+    config['games'][game]['last_save_time'] = last_save_time.isoformat()
+    config['games'][game]['last_backup_time'] = datetime.now().isoformat()
+    write_config(config)
+
+
 def write_config(new_config: Dict[str, Any]):
     """Write updated config to the config file"""
     with CONFIG_PATH.open('w') as f:
         yaml.safe_dump(new_config, f)
-
-
-def normalize_path(path: StrOrPath) -> Path:
-    return Path(path).expanduser().resolve()

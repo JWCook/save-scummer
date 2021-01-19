@@ -8,6 +8,6 @@ setup(
     include_package_data=True,
     install_requires=['appdirs', 'Click>=7.0', 'pyyaml>=5.0'],
     entry_points={
-        'console_scripts': ['ssc=save_scummer.main:ssc'],
+        'console_scripts': ['save-scummer=save_scummer.cli:ssc', 'ssc=save_scummer.cli:ssc'],
     },
 )

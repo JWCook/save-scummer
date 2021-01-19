@@ -1,10 +1,10 @@
-from datetime import datetime
 from glob import glob
 from pathlib import Path
 from typing import List, Tuple
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from save_scummer.config import StrOrPath, get_game_dirs, normalize_path
+from save_scummer.config import get_game_dirs, update_metadata
+from save_scummer.utils import StrOrPath, get_latest_modified, normalize_path
 
 
 def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
@@ -23,26 +23,31 @@ def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
     return [(path, path.relative_to(base_dir)) for path in abs_paths if str(path) != base_dir]
 
 
-# TODO: use original file timestamp instead?
 def make_backup(game: str, short_desc: str = None):
-    # Determine backup path
+    """Make a backup for the specified game. Backup will be named using the time the last save
+    was created, optionally with a short description.
+    """
     source_pattern, backup_dir = get_game_dirs(game)
-    timestamp = datetime.now().isoformat()
+    paths = get_included_files(source_pattern)
+    if not paths:
+        raise ValueError('No files are in the specified path')
+
+    # Determine backup path & filename
+    last_save_time = get_latest_modified([path[0] for path in paths])
     suffix = f'-{short_desc}.zip' if short_desc else '.zip'
-    archive_path = backup_dir.joinpath(f'{game}-{timestamp}{suffix}')
+    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{suffix}')
 
     # Write 'paths' inside archive relative to base (source) path
-    paths = get_included_files(source_pattern)
     with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as archive:
         for abs_path, rel_path in paths:
             # print(f'Writing {abs_path} -> {rel_path}')
             archive.write(abs_path, rel_path)
 
+    update_metadata(game, last_save_time)
     archive_size = archive_path.stat().st_size
     print(f'Backed up {len(paths)} files to {archive_path} ({archive_size} bytes)')
 
 
-# TODO: how to specify a specific backup? ID, any nonambiguous relative path/prefix, or full filename?
 def restore_backup(game, archive_path):
     # First, backup current state
     make_backup(game, short_desc='auto')
