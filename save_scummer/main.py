@@ -2,6 +2,7 @@ from pprint import pformat
 
 import click
 
+from save_scummer.backup import make_backup, restore_backup
 from save_scummer.config import add_game, list_games
 
 
@@ -26,10 +27,14 @@ def ls():
 
 
 @ssc.command()
-def backup():
-    pass
+@click.argument('name')
+def backup(name):
+    """Make a backup of the specified game"""
+    make_backup(name)
 
 
 @ssc.command()
-def restore():
-    pass
+@click.argument('name')
+def restore(name):
+    """Restore a backup of the specified game"""
+    restore_backup(name)
