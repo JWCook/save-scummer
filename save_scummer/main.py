@@ -2,8 +2,8 @@ from pprint import pformat
 
 import click
 
-from save_scummer.backup import make_backup, restore_backup
-from save_scummer.config import add_game, list_games
+from save_scummer.backup import get_included_files, make_backup, restore_backup
+from save_scummer.config import add_game, list_games, normalize_path
 
 
 @click.group()
@@ -12,12 +12,22 @@ def ssc():
 
 
 @ssc.command()
-@click.argument('name')
-@click.argument('path', type=click.Path(exists=True, resolve_path=True))
-def add(name: str, path: str):
-    """Add a game and its save directory"""
-    add_game(name, path)
-    click.echo(f'Source path for "{name}" added: {path}')
+@click.argument('game')
+@click.argument('path')
+def add(game: str, path: str):
+    """Add a game and its save directory.
+
+    \b
+    Relative paths, user paths, and glob patterns are supported:
+    ssc add mygame ~/Games/mygame       # Add a dir (including subdirs) under user home
+    ssc add mygame '~/Games/mygame/**'  # Equivalent glob pattern
+    ssc add 'C:/Games/mygame/*.sav'     # Add files ending in .sav
+    """
+    if not get_included_files(path):
+        click.secho('Error: No files are in the specified path')
+    else:
+        add_game(game, path)
+        click.echo(f'Source path for "{game}" added: {normalize_path(path)}')
 
 
 @ssc.command()
@@ -27,14 +37,17 @@ def ls():
 
 
 @ssc.command()
-@click.argument('name')
-def backup(name):
+@click.argument('game')
+def backup(game):
     """Make a backup of the specified game"""
-    make_backup(name)
+    make_backup(game)
 
 
 @ssc.command()
-@click.argument('name')
-def restore(name):
+@click.argument('game')
+@click.argument(
+    'archive_path'
+)  # Temporary until I add a better way to specify an individual backup
+def restore(game, archive_path):
     """Restore a backup of the specified game"""
-    restore_backup(name)
+    restore_backup(game, archive_path)
