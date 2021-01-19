@@ -5,7 +5,7 @@ from typing import Any, Dict, Tuple
 import yaml
 from appdirs import user_data_dir
 
-from save_scummer.utils import get_latest_modified, normalize_path
+from save_scummer.utils import format_timedelta, format_timestamp, get_dir_size, normalize_path
 
 DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
 CONFIG_PATH = DATA_DIR.joinpath('config.yml')
@@ -36,9 +36,30 @@ def get_game_dirs(game: str, config: Dict = None) -> Tuple[Path, Path]:
     return normalize_path(source_dir), normalize_path(backup_dir)
 
 
-def list_games() -> Dict[str, Any]:
+def list_games() -> Dict[str, Dict[str:Any]]:
+    backup_info = {}
     config = read_config()
-    return config['games']
+    for game, metadata in config['games'].items():
+        backup_info[game] = {}
+        source_pattern, backup_dir = get_game_dirs(game, config)
+
+        if 'last_save_time' not in metadata or 'last_backup_time' not in metadata:
+            backup_info[game]['Last backed up'] = 'never'
+            continue
+
+        # Format backup size info
+        backup_info[game]['Number of backups'] = len(list(backup_dir.iterdir()))
+        backup_info[game]['Total backup size'] = get_dir_size(backup_dir)
+
+        # Format last saved/backup info
+        save_time = format_timestamp(metadata['last_save_time'])
+        backup_time = format_timestamp(metadata['last_backup_time'])
+        save_time_elapsed = format_timedelta(metadata['last_save_time'])
+        backup_time_elapsed = format_timedelta(metadata['last_backup_time'])
+        backup_info[game][f'Last saved'] = f'{save_time} ({save_time_elapsed})'
+        backup_info[game][f'Last backed up'] = f'{backup_time} ({backup_time_elapsed})'
+
+    return backup_info
 
 
 def read_config() -> Dict[str, Any]:

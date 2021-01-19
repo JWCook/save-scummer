@@ -4,7 +4,7 @@ from typing import List, Tuple
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from save_scummer.config import get_game_dirs, update_metadata
-from save_scummer.utils import StrOrPath, get_latest_modified, normalize_path
+from save_scummer.utils import StrOrPath, format_file_size, get_latest_modified, normalize_path
 
 
 def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
@@ -44,7 +44,7 @@ def make_backup(game: str, short_desc: str = None):
             archive.write(abs_path, rel_path)
 
     update_metadata(game, last_save_time)
-    archive_size = archive_path.stat().st_size
+    archive_size = format_file_size(archive_path.stat().st_size)
     print(f'Backed up {len(paths)} files to {archive_path} ({archive_size} bytes)')
 
 
