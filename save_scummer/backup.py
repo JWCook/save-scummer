@@ -42,27 +42,65 @@ def make_backup(game: str, short_desc: str = None) -> str:
     archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{short_desc or ""}.zip')
 
     # Write 'paths' inside archive relative to base (source) path
-    with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as archive:
+    with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as f:
         for abs_path, rel_path in paths:
             # print(f'Writing {abs_path} -> {rel_path}')
-            archive.write(abs_path, rel_path)
+            f.write(abs_path, rel_path)
 
     update_metadata(game, last_save_time)
     archive_size = format_file_size(archive_path.stat().st_size)
     return f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
 
 
-def restore_backup(game, archive_path, index, age, date) -> str:
+def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
     """Restore a backup matching the given specification(s).
     Makes a backup of current state before overwriting.
+
+    Args:
+        game: Title of game
+        filename: Absolute or relative path to backup archive
+        index: Index of backup to restore
+        age: Min age of backup to restore
+        date: Max date of backup to restore
 
     Returns:
         Status message
     """
+    source_dir, backup_dir = get_game_dirs(game)
+    backup_files = list(backup_dir.iterdir())
+    n_backups = len(backup_files)
+
+    # Choose backup to restore based on specifier(s)
+    if filename:
+        pass
+    elif index:
+        if abs(index) > len(backup_files):
+            raise ValueError(f'Index {index} does not exist; {n_backups} backups are available')
+        filename = backup_files[index]
+    elif age:
+        filename = get_backup_by_age(backup_files, age)
+    elif date:
+        filename = get_backup_by_date(backup_files, age)
+    # If no backup specifiers were given, restore the most recent backup
+    else:
+        filename = backup_files[0]
+
+    # First backup current state before overwriting
     make_backup(game, short_desc='auto')
 
-    source_dir, backup_dir = get_game_dirs(game)
-    with ZipFile(archive_path) as archive:
-        archive.extractall(source_dir)
+    # Restore the selected backup
+    archive = Path(filename)
+    if not archive.is_absolute():
+        archive = backup_dir.joinpath(filename)
+    with ZipFile(archive) as f:
+        f.extractall(source_dir)
 
-    return f'Restored backup {archive_path} to {source_dir}'
+    return f'Restored backup {archive} to {source_dir}'
+
+
+def get_backup_by_age(backup_files: List, age: int) -> str:
+    raise NotImplementedError
+
+
+def get_backup_by_date(backup_files: List, date: str) -> str:
+    raise NotImplementedError

@@ -91,12 +91,71 @@ def backup(ctx, game, description):
     click.echo(status)
 
 
+# See [pytimeparse](https://github.com/wroberts/pytimeparse) for all possible formats
+# Most date/time formats are supported; see [dateutil](https://dateutil.readthedocs.io/en/stable/examples.html#parse-examples) for more examples
 @ssc.command()
 @click.pass_context
 @click.argument('game')
-@click.argument(
-    'archive_path'
-)  # Temporary until I add a better way to specify an individual backup
-def restore(game, archive_path):
-    """Restore a backup of the specified game"""
-    restore_backup(game, archive_path)
+@click.option(
+    '-i', '--index', help='Backup number (starting at 0, from newest to oldest)', type=click.INT
+)
+@click.option('-a', '--age', help='Minimum age (relative to current time)')
+@click.option('-d', '--date', help='Maximum date/time (absolute)')
+@click.option('-f', 'filename', help='Backup filename; either absolute or relative to backup dir')
+def restore(ctx, game, filename, index, age, date):
+    """Restore a backup of the specified game.
+    A specific backup can be indicated by backup number, age, date/time, or filename.
+
+    \n
+    Notes:
+    * Restores the most recent backup by default
+    * Makes a backup of the current save files before overwriting.
+    * For time specifiers, the time of the original save is used, not the time
+      of the backup.
+
+    \b
+    Backup specifiers:
+      Index:
+        The backup index, sorted from newest to oldest, e.g.
+        "restore the save from x backups ago." 0 is the latest backup, 1 is the
+        backup made before that, etc.
+        Negative values can also be given; -1 would give you the oldest backup.
+      Age:
+        Minimum age of the save to restore, e.g "I want to go back in time by
+        (at least) 1 hour." Amounts of time can be specified in 'HH:MM' format, or
+        with a number followed by a unit.
+        Examples: '1:30' (an hour and a half ago), '30m' (or '30 minutes'),
+        '6h' (or '6 hours'), '9 hours, 15 minutes' (or '9:15'), '2d' (or '2 days')
+      Date/Time:
+        Maximum date/time of the save to restore, e.g., "I want to go back in
+        time to 1:30 yesterday (or before)." Most date/time formats are supported.
+        Examples: '16:30' or '4:30 PM' (today), '2021-01-20', 'August 3 2020'
+      Filename:
+        Either a full path or just the filename
+
+    \b
+    Examples:
+      # Just restore the most recent backup
+      ssc restore game1
+      \b
+      # Restore the backup made 2 backups ago (aka the 3rd most recent)
+      ssc restore game1 -i 2
+      \b
+      # Restore a backup from (at least) an hour and a half ago
+      ssc restore -a '1:30'
+      \b
+      # Restore a backup from (at least) 2 days ago
+      ssc restore -a 2d
+      \b
+      # Restore a backup from 4:00 PM today or earlier
+      ssc restore -d '4:00 PM'
+      \b
+      # Restore a backup from March 22 or earlier
+      ssc restore -d 'Mar 22 2021'
+      \b
+      # Restore a backup by filename
+      ssc restore -f game1-2021-01-20T00:09:10.zip
+    """
+    with spin(ctx, 'Restoring backup'):
+        status = restore_backup(game, filename, index, age, date)
+    click.echo(status)
