@@ -34,8 +34,9 @@ def make_backup(game: str, short_desc: str = None):
 
     # Determine backup path & filename
     last_save_time = get_latest_modified([path[0] for path in paths])
-    suffix = f'-{short_desc}.zip' if short_desc else '.zip'
-    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{suffix}')
+    if short_desc:
+        short_desc = '-' + short_desc.lower().replace(' ', '_')
+    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{short_desc}.zip')
 
     # Write 'paths' inside archive relative to base (source) path
     with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as archive:

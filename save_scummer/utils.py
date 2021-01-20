@@ -8,25 +8,6 @@ StrOrPath = Union[Path, str]
 DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 
 
-def format_timedelta(compare_timestamp: str) -> str:
-    """Get the time elapsed since the specified timestamp in human-readable form,
-    e.g. "5 minutes ago" or "2 days ago"
-    """
-    diff = datetime.now() - parse_date(compare_timestamp)
-
-    if diff.days == 0:
-        if diff.seconds < 60:
-            return f'{diff.seconds} seconds ago'
-        elif diff.seconds < 3600:
-            return f'{int(diff.seconds / 60)} minutes ago'
-        else:
-            return f'{int(diff.seconds / 3600)} hours ago'
-    elif diff.days == 1:
-        return 'yesterday'
-    else:
-        return f'{diff.days} days ago'
-
-
 def format_file_size(n_bytes: int) -> str:
     """Given a number of bytes, return in human-readable format"""
     filesize = n_bytes
@@ -39,8 +20,27 @@ def format_file_size(n_bytes: int) -> str:
 
 
 def format_timestamp(timestamp: str) -> str:
-    """Reformat a datetime string into a common format"""
-    return parse_date(timestamp).strftime(DATETIME_FORMAT)
+    """Reformat a datetime string into a common format, along with time elapsed since that time.
+
+    Time elapsed is in human-readable form, e.g. "5 minutes ago" or "2 days ago."
+    Adapted from: https://stackoverflow.com/a/1551394
+    """
+    dt = parse_date(timestamp)
+    diff = datetime.now() - dt
+
+    if diff.days == 0:
+        if diff.seconds < 60:
+            time_elapsed = f'{diff.seconds} seconds ago'
+        elif diff.seconds < 3600:
+            time_elapsed = f'{int(diff.seconds / 60)} minutes ago'
+        else:
+            time_elapsed = f'{int(diff.seconds / 3600)} hours ago'
+    elif diff.days == 1:
+        time_elapsed = 'yesterday'
+    else:
+        time_elapsed = f'{diff.days} days ago'
+
+    return f'{dt.strftime(DATETIME_FORMAT)} ({time_elapsed})'
 
 
 def get_dir_size(path: Path) -> str:

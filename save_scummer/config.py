@@ -1,11 +1,11 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, List, Tuple
 
 import yaml
 from appdirs import user_data_dir
 
-from save_scummer.utils import format_timedelta, format_timestamp, get_dir_size, normalize_path
+from save_scummer.utils import format_timestamp, get_dir_size, normalize_path
 
 DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
 CONFIG_PATH = DATA_DIR.joinpath('config.yml')
@@ -36,28 +36,29 @@ def get_game_dirs(game: str, config: Dict = None) -> Tuple[Path, Path]:
     return normalize_path(source_dir), normalize_path(backup_dir)
 
 
-def list_games() -> Dict[str, Dict[str:Any]]:
-    backup_info = {}
+def list_games() -> List[Dict[str, str]]:
+    """Get formatted info on configured games and their backups
+
+    Returns:
+        A list of dicts containing formatted metadata
+    """
+    backup_info = []
     config = read_config()
     for game, metadata in config['games'].items():
-        backup_info[game] = {}
+        game_info = {'Game': game}
         source_pattern, backup_dir = get_game_dirs(game, config)
 
+        # Format backup size and date/time info
         if 'last_save_time' not in metadata or 'last_backup_time' not in metadata:
-            backup_info[game]['Last backed up'] = 'never'
-            continue
-
-        # Format backup size info
-        backup_info[game]['Number of backups'] = len(list(backup_dir.iterdir()))
-        backup_info[game]['Total backup size'] = get_dir_size(backup_dir)
-
-        # Format last saved/backup info
-        save_time = format_timestamp(metadata['last_save_time'])
-        backup_time = format_timestamp(metadata['last_backup_time'])
-        save_time_elapsed = format_timedelta(metadata['last_save_time'])
-        backup_time_elapsed = format_timedelta(metadata['last_backup_time'])
-        backup_info[game][f'Last saved'] = f'{save_time} ({save_time_elapsed})'
-        backup_info[game][f'Last backed up'] = f'{backup_time} ({backup_time_elapsed})'
+            game_info['Total backups'] = 0
+            game_info['Last saved'] = 'never'
+            game_info['Last backed up'] = 'never'
+        else:
+            n_backups = len(list(backup_dir.iterdir()))
+            game_info['Total backups'] = f'{n_backups} ({get_dir_size(backup_dir)})'
+            game_info['Last saved'] = format_timestamp(metadata['last_save_time'])
+            game_info['Last backed up'] = format_timestamp(metadata['last_backup_time'])
+        backup_info.append(game_info)
 
     return backup_info
 

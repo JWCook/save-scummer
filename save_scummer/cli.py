@@ -1,6 +1,5 @@
-from pprint import pformat
-
 import click
+from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
 from save_scummer.config import add_game, list_games, normalize_path
@@ -16,12 +15,13 @@ def ssc():
 @click.argument('path')
 def add(game: str, path: str):
     """Add a game and its save directory.
+    Relative paths, user paths, and glob patterns are supported.
 
     \b
-    Relative paths, user paths, and glob patterns are supported:
-    ssc add mygame ~/Games/mygame       # Add a dir (including subdirs) under user home
-    ssc add mygame '~/Games/mygame/**'  # Equivalent glob pattern
-    ssc add 'C:/Games/mygame/*.sav'     # Add files ending in .sav
+    Examples:
+      ssc add game1 ~/Games/game1           # Add a dir (including any subdirs)
+      ssc add game1 '~/Games/game1/**'      # Equivalent glob pattern (quotes required)
+      ssc add game2 'C:\\Games\\game2\\*.sav'  # Add files ending in .sav
     """
     if not get_included_files(path):
         click.secho('Error: No files are in the specified path')
@@ -33,14 +33,21 @@ def add(game: str, path: str):
 @ssc.command()
 def ls():
     """List all currently configured games"""
-    click.echo(pformat(list_games(), indent=4))
+    table = tabulate(list_games(), headers='keys', tablefmt='fancy_grid')
+    click.echo(table)
 
 
 @ssc.command()
 @click.argument('game')
-def backup(game):
-    """Make a backup of the specified game"""
-    make_backup(game)
+@click.argument('description')
+def backup(game, description):
+    """Make a backup of the specified game, optionally with a short description.
+
+    \b
+    Example:
+      ssc backup game1 'level 10 with full health'
+    """
+    make_backup(game, description)
 
 
 @ssc.command()
