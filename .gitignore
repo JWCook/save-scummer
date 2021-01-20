@@ -20,8 +20,9 @@ sdist
 var
 venv/
 
-# Installer logs
+# Logs
 pip-log.txt
+*.log
 
 # Unit test / coverage reports
 .coverage

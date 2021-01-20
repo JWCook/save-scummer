@@ -23,9 +23,12 @@ def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
     return [(path, path.relative_to(base_dir)) for path in abs_paths if str(path) != base_dir]
 
 
-def make_backup(game: str, short_desc: str = None):
+def make_backup(game: str, short_desc: str = None) -> str:
     """Make a backup for the specified game. Backup will be named using the time the last save
     was created, optionally with a short description.
+
+    Returns:
+        Status message
     """
     source_pattern, backup_dir = get_game_dirs(game)
     paths = get_included_files(source_pattern)
@@ -36,7 +39,7 @@ def make_backup(game: str, short_desc: str = None):
     last_save_time = get_latest_modified([path[0] for path in paths])
     if short_desc:
         short_desc = '-' + short_desc.lower().replace(' ', '_')
-    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{short_desc}.zip')
+    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{short_desc or ""}.zip')
 
     # Write 'paths' inside archive relative to base (source) path
     with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as archive:
@@ -46,15 +49,20 @@ def make_backup(game: str, short_desc: str = None):
 
     update_metadata(game, last_save_time)
     archive_size = format_file_size(archive_path.stat().st_size)
-    print(f'Backed up {len(paths)} files to {archive_path} ({archive_size} bytes)')
+    return f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
 
 
-def restore_backup(game, archive_path):
-    # First, backup current state
+def restore_backup(game, archive_path, index, age, date) -> str:
+    """Restore a backup matching the given specification(s).
+    Makes a backup of current state before overwriting.
+
+    Returns:
+        Status message
+    """
     make_backup(game, short_desc='auto')
 
     source_dir, backup_dir = get_game_dirs(game)
     with ZipFile(archive_path) as archive:
         archive.extractall(source_dir)
 
-    print(f'Restored backup {archive_path} to {source_dir}')
+    return f'Restored backup {archive_path} to {source_dir}'

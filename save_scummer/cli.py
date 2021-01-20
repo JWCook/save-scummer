@@ -1,8 +1,35 @@
+from contextlib import contextmanager
+from logging import basicConfig, getLogger
+
 import click
+from halo import Halo
 from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
 from save_scummer.config import add_game, list_games, normalize_path
+
+basicConfig(filename='save-scummer.log', level='INFO')
+logger = getLogger(__name__)
+
+
+@contextmanager
+def spin(ctx, text: str = None):
+    """Show a spinner within the wrapped context, handling any errors that occur"""
+    spinner = Halo(text, color='magenta', text_color='white')
+    with spinner:
+        try:
+            yield
+        # Show 'cancel' symbol on Ctrl-C
+        except KeyboardInterrupt:
+            spinner.stop_and_persist('🚫')
+            ctx.exit(1)
+        # On any other error, show the short error message and log the full traceback
+        except Exception as e:
+            spinner.fail()
+            click.secho(str(e), fg='red')
+            logger.exception(e)
+            ctx.exit(1)
+    spinner.succeed()
 
 
 @click.group()
@@ -38,19 +65,23 @@ def ls():
 
 
 @ssc.command()
+@click.pass_context
 @click.argument('game')
-@click.argument('description')
-def backup(game, description):
+@click.argument('description', required=False)
+def backup(ctx, game, description):
     """Make a backup of the specified game, optionally with a short description.
 
     \b
     Example:
       ssc backup game1 'level 10 with full health'
     """
-    make_backup(game, description)
+    with spin(ctx, 'Creating backup'):
+        status = make_backup(game, description)
+    click.echo(status)
 
 
 @ssc.command()
+@click.pass_context
 @click.argument('game')
 @click.argument(
     'archive_path'
