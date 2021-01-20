@@ -38,9 +38,10 @@ def ssc():
 
 
 @ssc.command()
+@click.pass_context
 @click.argument('game')
 @click.argument('path')
-def add(game: str, path: str):
+def add(ctx, game: str, path: str):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
 
@@ -50,11 +51,21 @@ def add(game: str, path: str):
       ssc add game1 '~/Games/game1/**'      # Equivalent glob pattern (quotes required)
       ssc add game2 'C:\\Games\\game2\\*.sav'  # Add files ending in .sav
     """
-    if not get_included_files(path):
+    included_files = [str(f[1]) for f in get_included_files(path)]
+    if not included_files:
         click.secho('Error: No files are in the specified path')
-    else:
-        add_game(game, path)
-        click.echo(f'Source path for "{game}" added: {normalize_path(path)}')
+        ctx.exit()
+
+    # If a glob pattern is specified, show the files matched as a sanity check
+    if '*' in path:
+        click.echo(
+            f'This pattern matches the following {len(included_files)} files:\n  '
+            + '\n  '.join(included_files)
+        )
+        click.confirm('Does this look correct?')
+
+    add_game(game, path)
+    click.echo(f'Source path for "{game}" added: {normalize_path(path)}')
 
 
 @ssc.command()

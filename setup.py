@@ -14,7 +14,9 @@ setup(
         'pytimeparse',
         'pyyaml>=5.0',
         'tabulate',
+        'watchdog',
     ],
+    extras_require={'dev': ['black', 'isort', 'flake8', 'mypy']},
     entry_points={
         'console_scripts': ['save-scummer=save_scummer.cli:ssc', 'ssc=save_scummer.cli:ssc'],
     },

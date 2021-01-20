@@ -10,7 +10,7 @@ DATETIME_FORMAT = '%Y-%m-%d %H:%M'
 
 def format_file_size(n_bytes: int) -> str:
     """Given a number of bytes, return in human-readable format"""
-    filesize = n_bytes
+    filesize = float(n_bytes)
     for unit in ['bytes', 'KB', 'MB', 'GB', 'TB']:
         if filesize >= 1024 and unit != 'TB':
             filesize /= 1024

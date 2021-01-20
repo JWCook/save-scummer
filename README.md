@@ -3,8 +3,8 @@
 
 A simple CLI utility to backup and restore game saves.
 This is mainly intended for rogue-lite games like **FTL** and **Don't Starve**.
-It could also, however, be easily applied to other games, or non-game applications, for example
-ones with breakage-prone, fiddly configuration.
+It could also be easily applied to other games, or non-game applications, for example
+ones with breakage-prone or complex configuration.
 
 I made this because I enjoy roguelike/rogue-lite games, but when I inevitably find one too difficult,
 I often resort to working around the permadeath mechanic by

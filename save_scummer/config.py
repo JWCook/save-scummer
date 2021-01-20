@@ -15,7 +15,8 @@ DEFAULT_CONFIG = {'games': {}}
 
 def add_game(game: str, source_path: str):
     config = read_config()
-    config['games'][game] = {'source': source_path}
+    config['games'].setdefault(game, {})
+    config['games'][game]['source'] = source_path
     write_config(config)
 
 
