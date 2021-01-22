@@ -16,10 +16,27 @@ so I decided to waste hours (semi-)automating it instead!
 None!
 
 ## Installation
-```python
+```bash
 # Not yet on pypi; will be published when at least basic functionality is working 
 pip install https://github.com/JWCook/save-scummer
 ```
+
+### Autocompletion (optional)
+If you use a Unix-based shell, you can install CLI autocompletion.
+
+**bash:** add this to `~/.bashrc`:
+```bash
+eval "$(_SSC_COMPLETE=source_bash ssc)"
+```
+**zsh:** add this to `~/.zshrc`:
+```zsh
+eval "$(_SSC_COMPLETE=source_zsh ssc)"
+```
+**fish:** add this to `~/.config/fish/completions/ssc.fish`:
+```fish
+eval (env _SSC_COMPLETE=source_fish ssc)
+```
+
 
 ## Usage
 Save-scummer provides the command `save-scummer` (also aliased as `ssc`) with the following subcommands:

@@ -67,6 +67,7 @@ def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
         Status message
     """
     source_dir, backup_dir = get_game_dirs(game)
+    # TODO: parse and sort timestamps
     backup_files = list(backup_dir.iterdir())
     n_backups = len(backup_files)
 

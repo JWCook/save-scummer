@@ -64,6 +64,32 @@ def list_games() -> List[Dict[str, str]]:
     return backup_info
 
 
+def list_game(game: str, config: Dict = None, extra_details: bool = False) -> Dict[str, str]:
+    """Get formatted info on a single game and its backups"""
+    config = config or read_config()
+    metadata = config['games'][game]
+    source_pattern, backup_dir = get_game_dirs(game, config)
+
+    # Format backup size and date/time info
+    game_info = {'Game': game}
+    if 'last_save_time' not in metadata or 'last_backup_time' not in metadata:
+        game_info['Total backups'] = 0
+        game_info['Last saved'] = 'never'
+        game_info['Last backed up'] = 'never'
+    else:
+        n_backups = len(list(backup_dir.iterdir()))
+        game_info['Total backups'] = f'{n_backups} ({get_dir_size(backup_dir)})'
+        game_info['Last saved'] = format_timestamp(metadata['last_save_time'])
+        game_info['Last backed up'] = format_timestamp(metadata['last_backup_time'])
+
+    if extra_details:
+        game_info['Source directory'] = source_pattern
+        game_info['Backup directory'] = backup_dir
+        game_info['Backup files'] = '\n' + '\n'.join([b.name for b in backup_dir.iterdir()])
+
+    return game_info
+
+
 def read_config() -> Dict[str, Any]:
     """Read config from the config file"""
     if not CONFIG_PATH.is_file():

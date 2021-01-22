@@ -6,10 +6,13 @@ from halo import Halo
 from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
-from save_scummer.config import add_game, list_games, normalize_path
+from save_scummer.config import add_game, list_game, list_games, normalize_path, read_config
 
 basicConfig(filename='save-scummer.log', level='INFO')
 logger = getLogger(__name__)
+
+# Param type containing a list of all game titles; used for autocompletion
+GameChoice = click.Choice(read_config()['games'])
 
 
 @contextmanager
@@ -39,9 +42,10 @@ def ssc():
 
 @ssc.command()
 @click.pass_context
-@click.argument('game')
+@click.argument('game', type=GameChoice)
 @click.argument('path')
-def add(ctx, game: str, path: str):
+@click.option('-a', type=click.Choice(['dont', 'game']))
+def add(ctx, game: str, path: str, a):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
 
@@ -67,17 +71,26 @@ def add(ctx, game: str, path: str):
     add_game(game, path)
     click.echo(f'Source path for "{game}" added: {normalize_path(path)}')
 
+    with spin(ctx, 'Creating backup'):
+        status = make_backup(game, 'initial backup')
+    click.echo(status)
+
 
 @ssc.command()
-def ls():
+@click.argument('game', type=GameChoice, required=False)
+def ls(game):
     """List all currently configured games"""
-    table = tabulate(list_games(), headers='keys', tablefmt='fancy_grid')
+    if game:
+        game_info = list_game(game, extra_details=True)
+        table = '\n'.join(f'{k}: \t{v}' for k, v in game_info.items())
+    else:
+        table = tabulate(list_games(), headers='keys', tablefmt='fancy_grid')
     click.echo(table)
 
 
 @ssc.command()
 @click.pass_context
-@click.argument('game')
+@click.argument('game', type=GameChoice)
 @click.argument('description', required=False)
 def backup(ctx, game, description):
     """Make a backup of the specified game, optionally with a short description.
@@ -95,7 +108,7 @@ def backup(ctx, game, description):
 # Most date/time formats are supported; see [dateutil](https://dateutil.readthedocs.io/en/stable/examples.html#parse-examples) for more examples
 @ssc.command()
 @click.pass_context
-@click.argument('game')
+@click.argument('game', type=GameChoice)
 @click.option(
     '-i', '--index', help='Backup number (starting at 0, from newest to oldest)', type=click.INT
 )
@@ -142,19 +155,19 @@ def restore(ctx, game, filename, index, age, date):
       ssc restore game1 -i 2
       \b
       # Restore a backup from (at least) an hour and a half ago
-      ssc restore -a '1:30'
+      ssc restore game1 -a '1:30'
       \b
       # Restore a backup from (at least) 2 days ago
-      ssc restore -a 2d
+      ssc restore game1 -a 2d
       \b
       # Restore a backup from 4:00 PM today or earlier
-      ssc restore -d '4:00 PM'
+      ssc restore game1 -d '4:00 PM'
       \b
       # Restore a backup from March 22 or earlier
-      ssc restore -d 'Mar 22 2021'
+      ssc restore game1 -d 'Mar 22 2021'
       \b
       # Restore a backup by filename
-      ssc restore -f game1-2021-01-20T00:09:10.zip
+      ssc restore game1 -f game1-2021-01-20T00:09:10.zip
     """
     with spin(ctx, 'Restoring backup'):
         status = restore_backup(game, filename, index, age, date)
