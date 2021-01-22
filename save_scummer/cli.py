@@ -94,7 +94,7 @@ def add(ctx, game: str, path: str):
 @ssc.command()
 @click.argument('game', type=GameChoice, required=False)
 def ls(game):
-    """List all currently configured games"""
+    """List details on all configured games. Or, enter a game title to get more detailed info."""
     if game:
         game_info = list_game(game, extra_details=True)
         table = '\n'.join(f'{k}: \t{v}' for k, v in game_info.items())
@@ -159,7 +159,7 @@ def restore(ctx, game, filename, index, age, date):
         time to 1:30 yesterday (or before)." Most date/time formats are supported.
         Examples: '16:30' or '4:30 PM' (today), '2021-01-20', 'August 3 2020'
       Filename:
-        Either a full path or just the filename
+        Either a full path or just the filename (relative to the backup dir)
 
     \b
     Examples:

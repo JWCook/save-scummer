@@ -1,8 +1,9 @@
 """Misc utility functions"""
 from datetime import datetime
 from dateutil.parser import parse as parse_date
+from os.path import getmtime
 from pathlib import Path
-from typing import List, Union
+from typing import Iterable, List, Union
 
 StrOrPath = Union[Path, str]
 DATETIME_FORMAT = '%Y-%m-%d %H:%M'
@@ -25,6 +26,8 @@ def format_timestamp(timestamp: str) -> str:
     Time elapsed is in human-readable form, e.g. "5 minutes ago" or "2 days ago."
     Adapted from: https://stackoverflow.com/a/1551394
     """
+    if not timestamp:
+        return 'never'
     dt = parse_date(timestamp)
     diff = datetime.now() - dt
 
@@ -43,13 +46,25 @@ def format_timestamp(timestamp: str) -> str:
     return f'{dt.strftime(DATETIME_FORMAT)} ({time_elapsed})'
 
 
+def get_dir_files_by_date(path: Path = None) -> List[Path]:
+    """Get all backup files for the specified game (or directory), sorted by creation date (desc)"""
+    try:
+        files = list(Path(path).iterdir())
+    except IOError:
+        return []
+    return sorted(files, key=getmtime, reverse=True)
+
+
 def get_dir_size(path: Path) -> str:
     """Get (non-recursive) sum of file sizes in the given directory, in human-readable format"""
-    file_sizes = [f.stat().st_size for f in path.iterdir()]
+    try:
+        file_sizes = [f.stat().st_size for f in path.iterdir()]
+    except IOError:
+        return '0 bytes'
     return format_file_size(sum(file_sizes))
 
 
-def get_latest_modified(paths: List[Path]) -> datetime:
+def get_latest_modified(paths: Iterable[Path]) -> datetime:
     """Get the most recent 'modified on' timestamp (ISO format) from the paths given.
     For a save directory with multiple files, this is the best indicator of when the save was
     created, as not all files may be modified with each save.

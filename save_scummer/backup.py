@@ -4,7 +4,13 @@ from typing import List, Tuple
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from save_scummer.config import get_game_dirs, update_metadata
-from save_scummer.utils import StrOrPath, format_file_size, get_latest_modified, normalize_path
+from save_scummer.utils import (
+    StrOrPath,
+    format_file_size,
+    get_dir_files_by_date,
+    get_latest_modified,
+    normalize_path,
+)
 
 
 def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
@@ -67,8 +73,7 @@ def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
         Status message
     """
     source_dir, backup_dir = get_game_dirs(game)
-    # TODO: parse and sort timestamps
-    backup_files = list(backup_dir.iterdir())
+    backup_files = get_dir_files_by_date(backup_dir)
     n_backups = len(backup_files)
 
     # Choose backup to restore based on specifier(s)

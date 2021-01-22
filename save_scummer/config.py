@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple
 import yaml
 from appdirs import user_data_dir
 
-from save_scummer.utils import format_timestamp, get_dir_size, normalize_path
+from save_scummer.utils import format_timestamp, get_dir_files_by_date, get_dir_size, normalize_path
 
 DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
 CONFIG_PATH = DATA_DIR.joinpath('config.yml')
@@ -43,25 +43,8 @@ def list_games() -> List[Dict[str, str]]:
     Returns:
         A list of dicts containing formatted metadata
     """
-    backup_info = []
     config = read_config()
-    for game, metadata in config['games'].items():
-        game_info = {'Game': game}
-        source_pattern, backup_dir = get_game_dirs(game, config)
-
-        # Format backup size and date/time info
-        if 'last_save_time' not in metadata or 'last_backup_time' not in metadata:
-            game_info['Total backups'] = 0
-            game_info['Last saved'] = 'never'
-            game_info['Last backed up'] = 'never'
-        else:
-            n_backups = len(list(backup_dir.iterdir()))
-            game_info['Total backups'] = f'{n_backups} ({get_dir_size(backup_dir)})'
-            game_info['Last saved'] = format_timestamp(metadata['last_save_time'])
-            game_info['Last backed up'] = format_timestamp(metadata['last_backup_time'])
-        backup_info.append(game_info)
-
-    return backup_info
+    return [list_game(game, config) for game in config['games']]
 
 
 def list_game(game: str, config: Dict = None, extra_details: bool = False) -> Dict[str, str]:
@@ -69,23 +52,21 @@ def list_game(game: str, config: Dict = None, extra_details: bool = False) -> Di
     config = config or read_config()
     metadata = config['games'][game]
     source_pattern, backup_dir = get_game_dirs(game, config)
+    backup_files = get_dir_files_by_date(backup_dir)
 
     # Format backup size and date/time info
-    game_info = {'Game': game}
-    if 'last_save_time' not in metadata or 'last_backup_time' not in metadata:
-        game_info['Total backups'] = 0
-        game_info['Last saved'] = 'never'
-        game_info['Last backed up'] = 'never'
-    else:
-        n_backups = len(list(backup_dir.iterdir()))
-        game_info['Total backups'] = f'{n_backups} ({get_dir_size(backup_dir)})'
-        game_info['Last saved'] = format_timestamp(metadata['last_save_time'])
-        game_info['Last backed up'] = format_timestamp(metadata['last_backup_time'])
+    game_info = {
+        'Game': game,
+        'Total backups': f'{len(backup_files)} ({get_dir_size(backup_dir)}',
+        'Last saved': format_timestamp(metadata.get('last_save_time')),
+        'Last backed up': format_timestamp(metadata.get('last_backup_time')),
+    }
 
     if extra_details:
         game_info['Source directory'] = source_pattern
         game_info['Backup directory'] = backup_dir
-        game_info['Backup files'] = '\n' + '\n'.join([b.name for b in backup_dir.iterdir()])
+        formatted_files = [f'{i}:\t {f.name}' for i, f in enumerate(backup_files)]
+        game_info['Backup files'] = '\n' + '\n'.join(formatted_files)
 
     return game_info
 
