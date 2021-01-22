@@ -2,6 +2,9 @@ from contextlib import contextmanager
 from logging import basicConfig, getLogger
 
 import click
+from click_completion import init as init_completion
+from click_completion.core import install as install_completion
+from click_completion.core import shells
 from halo import Halo
 from tabulate import tabulate
 
@@ -9,6 +12,7 @@ from save_scummer.backup import get_included_files, make_backup, restore_backup
 from save_scummer.config import add_game, list_game, list_games, normalize_path, read_config
 
 basicConfig(filename='save-scummer.log', level='INFO')
+init_completion()
 logger = getLogger(__name__)
 
 # Param type containing a list of all game titles; used for autocompletion
@@ -35,17 +39,28 @@ def spin(ctx, text: str = None):
     spinner.succeed()
 
 
-@click.group()
-def ssc():
-    pass
+@click.group(context_settings={'help_option_names': ['-h', '--help']}, invoke_without_command=True)
+@click.option(
+    '--install',
+    type=click.Choice(shells),
+    help='Install completion script for the specified shell',
+)
+@click.pass_context
+def ssc(ctx, install):
+    if ctx.invoked_subcommand:
+        pass
+    elif install:
+        shell, path = install_completion(install)
+        click.echo(f'{shell} completion installed in {path}')
+    else:
+        click.echo(ssc.get_help(ctx))
 
 
 @ssc.command()
-@click.pass_context
 @click.argument('game', type=GameChoice)
 @click.argument('path')
-@click.option('-a', type=click.Choice(['dont', 'game']))
-def add(ctx, game: str, path: str, a):
+@click.pass_context
+def add(ctx, game: str, path: str):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
 
@@ -89,9 +104,9 @@ def ls(game):
 
 
 @ssc.command()
-@click.pass_context
 @click.argument('game', type=GameChoice)
 @click.argument('description', required=False)
+@click.pass_context
 def backup(ctx, game, description):
     """Make a backup of the specified game, optionally with a short description.
 
@@ -107,7 +122,6 @@ def backup(ctx, game, description):
 # See [pytimeparse](https://github.com/wroberts/pytimeparse) for all possible formats
 # Most date/time formats are supported; see [dateutil](https://dateutil.readthedocs.io/en/stable/examples.html#parse-examples) for more examples
 @ssc.command()
-@click.pass_context
 @click.argument('game', type=GameChoice)
 @click.option(
     '-i', '--index', help='Backup number (starting at 0, from newest to oldest)', type=click.INT
@@ -115,6 +129,7 @@ def backup(ctx, game, description):
 @click.option('-a', '--age', help='Minimum age (relative to current time)')
 @click.option('-d', '--date', help='Maximum date/time (absolute)')
 @click.option('-f', 'filename', help='Backup filename; either absolute or relative to backup dir')
+@click.pass_context
 def restore(ctx, game, filename, index, age, date):
     """Restore a backup of the specified game.
     A specific backup can be indicated by backup number, age, date/time, or filename.

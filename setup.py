@@ -9,6 +9,7 @@ setup(
     install_requires=[
         'appdirs',
         'Click>=7.0',
+        'click-completion',
         'halo',
         'python-dateutil',
         'pytimeparse',

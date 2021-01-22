@@ -22,21 +22,8 @@ pip install https://github.com/JWCook/save-scummer
 ```
 
 ### Autocompletion (optional)
-If you use a Unix-based shell, you can install CLI autocompletion.
-
-**bash:** add this to `~/.bashrc`:
-```bash
-eval "$(_SSC_COMPLETE=source_bash ssc)"
-```
-**zsh:** add this to `~/.zshrc`:
-```zsh
-eval "$(_SSC_COMPLETE=source_zsh ssc)"
-```
-**fish:** add this to `~/.config/fish/completions/ssc.fish`:
-```fish
-eval (env _SSC_COMPLETE=source_fish ssc)
-```
-
+CLI autocompletion is available for most common shells: **bash, fish, zsh** and Windows **PowerShell**.
+To install, just run `ssc --install [shell name]`
 
 ## Usage
 Save-scummer provides the command `save-scummer` (also aliased as `ssc`) with the following subcommands:
