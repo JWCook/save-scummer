@@ -13,24 +13,33 @@ DEFAULT_BACKUP_DIR = DATA_DIR.joinpath('backups')
 DEFAULT_CONFIG = {'games': {}}
 
 
-def add_game(game: str, source_path: str):
-    config = read_config()
-    config['games'].setdefault(game, {})
-    config['games'][game]['source'] = source_path
-    write_config(config)
+def read_config() -> Dict[str, Any]:
+    """Read config from the config file"""
+    if not CONFIG_PATH.is_file():
+        DATA_DIR.mkdir(parents=True, exist_ok=True)
+        return DEFAULT_CONFIG
+    with CONFIG_PATH.open() as f:
+        return yaml.safe_load(f)
 
 
-def get_game_dirs(game: str, config: Dict = None) -> Tuple[Path, Path]:
+CONFIG = read_config()
+
+
+def add_game(game: str, source: str, clean_restore: bool = False):
+    CONFIG['games'].setdefault(game, {})
+    CONFIG['games'][game]['source'] = source
+    CONFIG['games'][game]['clean_restore'] = clean_restore
+    write_config(CONFIG)
+
+
+def get_game_dirs(game: str) -> Tuple[Path, Path]:
     """Get the source and backup directories for the given game"""
-    config = config or read_config()
-    source_dir = config['games'].get(game).get('source')
+    source_dir = CONFIG['games'].get(game).get('source')
     if not source_dir:
         raise ValueError(f'Game {game} not configured')
 
     # Get custom backup directory, if different from default
-    backup_base_dir = DEFAULT_BACKUP_DIR
-    if config.get('backup_dir'):
-        backup_base_dir = config['backup_dir']
+    backup_base_dir = CONFIG.get('backup_dir') or DEFAULT_BACKUP_DIR
 
     backup_dir = Path(backup_base_dir).joinpath(game)
     backup_dir.mkdir(parents=True, exist_ok=True)
@@ -43,21 +52,19 @@ def list_games() -> List[Dict[str, str]]:
     Returns:
         A list of dicts containing formatted metadata
     """
-    config = read_config()
-    return [list_game(game, config) for game in config['games']]
+    return [list_game(game) for game in CONFIG['games']]
 
 
-def list_game(game: str, config: Dict = None, extra_details: bool = False) -> Dict[str, str]:
+def list_game(game: str, extra_details: bool = False) -> Dict[str, str]:
     """Get formatted info on a single game and its backups"""
-    config = config or read_config()
-    metadata = config['games'][game]
-    source_pattern, backup_dir = get_game_dirs(game, config)
+    metadata = CONFIG['games'][game]
+    source_pattern, backup_dir = get_game_dirs(game)
     backup_files = get_dir_files_by_date(backup_dir)
 
     # Format backup size and date/time info
     game_info = {
         'Game': game,
-        'Total backups': f'{len(backup_files)} ({get_dir_size(backup_dir)}',
+        'Total backups': f'{len(backup_files)} ({get_dir_size(backup_dir)})',
         'Last saved': format_timestamp(metadata.get('last_save_time')),
         'Last backed up': format_timestamp(metadata.get('last_backup_time')),
     }
@@ -71,21 +78,11 @@ def list_game(game: str, config: Dict = None, extra_details: bool = False) -> Di
     return game_info
 
 
-def read_config() -> Dict[str, Any]:
-    """Read config from the config file"""
-    if not CONFIG_PATH.is_file():
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        return DEFAULT_CONFIG
-    with CONFIG_PATH.open() as f:
-        return yaml.safe_load(f)
-
-
 def update_metadata(game: str, last_save_time: datetime):
     """Store metadata for a given game on the date/time of the last save (source) and backup"""
-    config = read_config()
-    config['games'][game]['last_save_time'] = last_save_time.isoformat()
-    config['games'][game]['last_backup_time'] = datetime.now().isoformat()
-    write_config(config)
+    CONFIG['games'][game]['last_save_time'] = last_save_time.isoformat()
+    CONFIG['games'][game]['last_backup_time'] = datetime.now().isoformat()
+    write_config(CONFIG)
 
 
 def write_config(new_config: Dict[str, Any]):

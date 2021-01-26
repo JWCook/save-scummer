@@ -1,9 +1,10 @@
 from glob import glob
 from pathlib import Path
+from shutil import rmtree
 from typing import List, Tuple
 from zipfile import ZIP_DEFLATED, ZipFile
 
-from save_scummer.config import get_game_dirs, update_metadata
+from save_scummer.config import CONFIG, get_game_dirs, update_metadata
 from save_scummer.utils import (
     StrOrPath,
     format_file_size,
@@ -92,12 +93,17 @@ def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
         filename = backup_files[0]
 
     # First backup current state before overwriting
-    make_backup(game, short_desc='auto')
+    make_backup(game, short_desc='pre-restore')
+
+    clean_restore = True
+    if CONFIG[game]['clean_restore']:
+        rmtree(source_dir)
 
     # Restore the selected backup
     archive = Path(filename)
     if not archive.is_absolute():
         archive = backup_dir.joinpath(filename)
+    source_dir.mkdir(parents=True, exist_ok=True)
     with ZipFile(archive) as f:
         f.extractall(source_dir)
 

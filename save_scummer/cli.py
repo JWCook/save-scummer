@@ -9,14 +9,14 @@ from halo import Halo
 from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
-from save_scummer.config import add_game, list_game, list_games, normalize_path, read_config
+from save_scummer.config import CONFIG, add_game, list_game, list_games, normalize_path
 
 basicConfig(filename='save-scummer.log', level='INFO')
 init_completion()
 logger = getLogger(__name__)
 
 # Param type containing a list of all game titles; used for autocompletion
-GameChoice = click.Choice(read_config()['games'])
+GameChoice = click.Choice(CONFIG['games'])
 
 
 @contextmanager
@@ -59,8 +59,14 @@ def ssc(ctx, install):
 @ssc.command()
 @click.argument('game', type=GameChoice)
 @click.argument('path')
+@click.option(
+    '-c',
+    '--clean-restore',
+    default=False,
+    help='Delete existing save files before restoring backups',
+)
 @click.pass_context
-def add(ctx, game: str, path: str):
+def add(ctx, game: str, source: str, clean_restore):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
 
@@ -70,25 +76,21 @@ def add(ctx, game: str, path: str):
       ssc add game1 '~/Games/game1/**'      # Equivalent glob pattern (quotes required)
       ssc add game2 'C:\\Games\\game2\\*.sav'  # Add files ending in .sav
     """
-    included_files = [str(f[1]) for f in get_included_files(path)]
+    included_files = [str(f[1]) for f in get_included_files(source)]
     if not included_files:
         click.secho('Error: No files are in the specified path')
         ctx.exit()
 
     # If a glob pattern is specified, show the files matched as a sanity check
-    if '*' in path:
+    if '*' in source:
         click.echo(
             f'This pattern matches the following {len(included_files)} files:\n  '
             + '\n  '.join(included_files)
         )
         click.confirm('Does this look correct?')
 
-    add_game(game, path)
-    click.echo(f'Source path for "{game}" added: {normalize_path(path)}')
-
-    with spin(ctx, 'Creating backup'):
-        status = make_backup(game, 'initial backup')
-    click.echo(status)
+    add_game(game, source=source, clean_restore=clean_restore)
+    click.echo(f'Source path for "{game}" added: {normalize_path(source)}')
 
 
 @ssc.command()

@@ -6,8 +6,7 @@
   * Date/time, for latest backup no later than given time,
     e.g. I messed up my game around 10:30, so specify `10:30am` for last backup created before then
   * Absolute or relative (to backup dir) filename
-* Add tab completion for configured games  
-* Show more detailed info for `ls [game]`
+* Option to restore to a specified directory instead of source dir 
 * Add secondary cloud storage sync dir (for Google Drive, Nextcloud, etc.)
 * 'backup all' command: run a backup for all configured games
   * Ignore any games with files that haven't changed; compare saved `last_save_time` to current
