@@ -121,8 +121,6 @@ def backup(ctx, game, description):
     click.echo(status)
 
 
-# See [pytimeparse](https://github.com/wroberts/pytimeparse) for all possible formats
-# Most date/time formats are supported; see [dateutil](https://dateutil.readthedocs.io/en/stable/examples.html#parse-examples) for more examples
 @ssc.command()
 @click.argument('game', type=GameChoice)
 @click.option(
@@ -134,11 +132,11 @@ def backup(ctx, game, description):
 @click.pass_context
 def restore(ctx, game, filename, index, age, date):
     """Restore a backup of the specified game.
-    A specific backup can be indicated by backup number, age, date/time, or filename.
+    A specific backup can be indicated by backup index, age, date/time, or filename.
+    Otherwise, the most recent backup is restored.
 
-    \n
+    \b
     Notes:
-    * Restores the most recent backup by default
     * Makes a backup of the current save files before overwriting.
     * For time specifiers, the time of the original save is used, not the time
       of the backup.
@@ -147,19 +145,28 @@ def restore(ctx, game, filename, index, age, date):
     Backup specifiers:
       Index:
         The backup index, sorted from newest to oldest, e.g.
-        "restore the save from x backups ago." 0 is the latest backup, 1 is the
+        "Restore the save from x backups ago." 0 is the latest backup, 1 is the
         backup made before that, etc.
         Negative values can also be given; -1 would give you the oldest backup.
       Age:
         Minimum age of the save to restore, e.g "I want to go back in time by
-        (at least) 1 hour." Amounts of time can be specified in 'HH:MM' format, or
+        1 hour." Amounts of time can be specified in 'HH:MM' format, or
         with a number followed by a unit.
-        Examples: '1:30' (an hour and a half ago), '30m' (or '30 minutes'),
-        '6h' (or '6 hours'), '9 hours, 15 minutes' (or '9:15'), '2d' (or '2 days')
+        Examples:
+          * '1:30' (an hour and a half ago)
+          * '30m' (or '30 minutes')
+          * '6h' (or '6 hours')
+          * '9 hours, 15 minutes' (or '9:15')
+          * '2d' (or '2 days')
+          * See pytimeparse for more formats
       Date/Time:
         Maximum date/time of the save to restore, e.g., "I want to go back in
-        time to 1:30 yesterday (or before)." Most date/time formats are supported.
+        time to 1:30 yesterday." Most date/time formats are supported.
         Examples: '16:30' or '4:30 PM' (today), '2021-01-20', 'August 3 2020'
+          * '16:30' or '4:30 PM' (today)
+          * '2021-01-20'
+          * 'August 3 2020'
+          * Most date/time formats are supported; see dateutil for more examples
       Filename:
         Either a full path or just the filename (relative to the backup dir)
 

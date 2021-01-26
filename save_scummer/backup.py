@@ -1,13 +1,16 @@
+from datetime import datetime
+from dateutil.parser import parse as parse_date
 from glob import glob
 from pathlib import Path
 from shutil import rmtree
-from typing import List, Tuple
+from typing import Dict, List, Tuple, Union
 from zipfile import ZIP_DEFLATED, ZipFile
 
 from save_scummer.config import CONFIG, get_game_dirs, update_metadata
 from save_scummer.utils import (
     StrOrPath,
     format_file_size,
+    get_datetime_by_age,
     get_dir_files_by_date,
     get_latest_modified,
     normalize_path,
@@ -59,7 +62,9 @@ def make_backup(game: str, short_desc: str = None) -> str:
     return f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
 
 
-def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
+def restore_backup(
+    game: str, filename: str = None, index: int = None, age: str = None, date: str = None
+) -> str:
     """Restore a backup matching the given specification(s).
     Makes a backup of current state before overwriting.
 
@@ -67,42 +72,40 @@ def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
         game: Title of game
         filename: Absolute or relative path to backup archive
         index: Index of backup to restore
-        age: Min age of backup to restore
-        date: Max date of backup to restore
+        age: Min age of backup to restore (as a time expression string)
+        date: Max date of backup to restore (as a timestamp string)
 
     Returns:
         Status message
     """
     source_dir, backup_dir = get_game_dirs(game)
-    backup_files = get_dir_files_by_date(backup_dir)
-    n_backups = len(backup_files)
+    backups = get_dir_files_by_date(backup_dir)
+    backup_paths = list(backups.keys())
+    n_backups = len(backup_paths)
 
     # Choose backup to restore based on specifier(s)
     if filename:
-        pass
+        archive = Path(filename)
     elif index:
-        if abs(index) > len(backup_files):
+        if abs(index) > n_backups:
             raise ValueError(f'Index {index} does not exist; {n_backups} backups are available')
-        filename = backup_files[index]
+        archive = backup_paths[index]
     elif age:
-        filename = get_backup_by_age(backup_files, age)
+        archive = get_backup_by_age(backups, age)
     elif date:
-        filename = get_backup_by_date(backup_files, age)
+        archive = get_backup_by_date(backups, date)
     # If no backup specifiers were given, restore the most recent backup
     else:
-        filename = backup_files[0]
+        archive = backup_paths[0]
 
-    # First backup current state before overwriting
+    # First backup current files before overwriting, and delete them if clean_restore is specified
     make_backup(game, short_desc='pre-restore')
-
-    clean_restore = True
     if CONFIG[game]['clean_restore']:
         rmtree(source_dir)
 
     # Restore the selected backup
-    archive = Path(filename)
     if not archive.is_absolute():
-        archive = backup_dir.joinpath(filename)
+        archive = backup_dir.joinpath(archive)
     source_dir.mkdir(parents=True, exist_ok=True)
     with ZipFile(archive) as f:
         f.extractall(source_dir)
@@ -110,9 +113,16 @@ def restore_backup(game: str, filename: str, index: int, age, date: str) -> str:
     return f'Restored backup {archive} to {source_dir}'
 
 
-def get_backup_by_age(backup_files: List, age: int) -> str:
-    raise NotImplementedError
+def get_backup_by_age(backups: Dict[Path, datetime], age: str) -> Path:
+    return get_backup_by_date(backups, get_datetime_by_age(age))
 
 
-def get_backup_by_date(backup_files: List, date: str) -> str:
+def get_backup_by_date(backups: Dict[Path, datetime], target_date: Union[datetime, str]) -> Path:
+    if not isinstance(target_date, datetime):
+        target_date = parse_date(target_date)
+
+    # Backups are already sorted by date descending; get the first one on or before the target date
+    for backup_path, creation_date in backups.items():
+        if creation_date <= target_date:
+            return backup_path
     raise NotImplementedError

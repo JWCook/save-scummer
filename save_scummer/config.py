@@ -72,7 +72,7 @@ def list_game(game: str, extra_details: bool = False) -> Dict[str, str]:
     if extra_details:
         game_info['Source directory'] = source_pattern
         game_info['Backup directory'] = backup_dir
-        formatted_files = [f'{i}:\t {f.name}' for i, f in enumerate(backup_files)]
+        formatted_files = [f'{i}:\t {f.name}' for i, f in enumerate(backup_files.keys())]
         game_info['Backup files'] = '\n' + '\n'.join(formatted_files)
 
     return game_info

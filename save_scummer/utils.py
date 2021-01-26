@@ -1,9 +1,11 @@
 """Misc utility functions"""
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil.parser import parse as parse_date
 from os.path import getmtime
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Dict, Iterable, Union
+
+from pytimeparse import parse as parse_time
 
 StrOrPath = Union[Path, str]
 DATETIME_FORMAT = '%Y-%m-%d %H:%M'
@@ -46,13 +48,21 @@ def format_timestamp(timestamp: str) -> str:
     return f'{dt.strftime(DATETIME_FORMAT)} ({time_elapsed})'
 
 
-def get_dir_files_by_date(path: Path = None) -> List[Path]:
-    """Get all backup files for the specified game (or directory), sorted by creation date (desc)"""
+def get_datetime_by_age(age: str) -> datetime:
+    age_delta = timedelta(seconds=parse_time(age))
+    return datetime.now() - age_delta
+
+
+def get_dir_files_by_date(path: Path = None) -> Dict[Path, datetime]:
+    """Get all files in the specified directory, sorted by creation date (desc),
+    along with the parsed datetime.
+    """
     try:
         files = list(Path(path).iterdir())
     except IOError:
-        return []
-    return sorted(files, key=getmtime, reverse=True)
+        return {}
+    files = sorted(files, key=getmtime, reverse=True)
+    return {path: datetime.fromtimestamp(path.stat().st_mtime) for path in files}
 
 
 def get_dir_size(path: Path) -> str:
