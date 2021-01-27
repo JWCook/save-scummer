@@ -9,14 +9,14 @@ from halo import Halo
 from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
-from save_scummer.config import CONFIG, add_game, list_game, list_games, normalize_path
+from save_scummer.config import GAMES, add_game, list_game, list_games, normalize_path
 
 basicConfig(filename='save-scummer.log', level='INFO')
 init_completion()
 logger = getLogger(__name__)
 
 # Param type containing a list of all game titles; used for autocompletion
-GameChoice = click.Choice(CONFIG['games'])
+GameChoice = click.Choice(GAMES)
 
 
 @contextmanager
@@ -69,6 +69,7 @@ def ssc(ctx, install):
 def add(ctx, game: str, source: str, clean_restore):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
+    This command can also be used to update a previously added game.
 
     \b
     Examples:
@@ -98,6 +99,7 @@ def add(ctx, game: str, source: str, clean_restore):
 def ls(game):
     """List details on all configured games. Or, enter a game title to get more detailed info."""
     if game:
+        # TODO: alignment
         game_info = list_game(game, extra_details=True)
         table = '\n'.join(f'{k}: \t{v}' for k, v in game_info.items())
     else:
@@ -106,19 +108,40 @@ def ls(game):
 
 
 @ssc.command()
-@click.argument('game', type=GameChoice)
-@click.argument('description', required=False)
+@click.argument('titles', type=GameChoice, nargs=-1)
+@click.option('-d', '--desc', '--description', help='Optional description for this backup')
+@click.option(
+    '-a', '--all', help='Make a backup of all configured games', default=False, is_flag=True
+)
 @click.pass_context
-def backup(ctx, game, description):
-    """Make a backup of the specified game, optionally with a short description.
+def backup(ctx, titles, description, all):
+    """Create a backup of one, multiple, or all games
 
     \b
     Example:
-      ssc backup game1 'level 10 with full health'
+      # Create a single backup
+      ssc backup game1
+      \b
+      # Create a backup with a description
+      ssc backup game1 --desc 'level 10 with full health'
+      \b
+      # Backup multiple games
+      ssc backup game1 game2
+      \b
+      # Backup all of the things
+      ssc backup --all
+
     """
-    with spin(ctx, 'Creating backup'):
-        status = make_backup(game, description)
-    click.echo(status)
+    # Exactly one of these args is required (title(s) XOR all)
+    if bool(titles) == bool(all):
+        click.echo(backup.get_help(ctx))
+        ctx.exit(1)
+
+    titles_to_backup = GAMES if all else titles
+    for title in titles_to_backup:
+        with spin(ctx, 'Creating backup'):
+            status = make_backup(title, description)
+        click.echo(status)
 
 
 @ssc.command()
@@ -148,6 +171,7 @@ def restore(ctx, game, filename, index, age, date):
         "Restore the save from x backups ago." 0 is the latest backup, 1 is the
         backup made before that, etc.
         Negative values can also be given; -1 would give you the oldest backup.
+        See ls command for full list of available backups.
       Age:
         Minimum age of the save to restore, e.g "I want to go back in time by
         1 hour." Amounts of time can be specified in 'HH:MM' format, or

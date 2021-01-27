@@ -23,6 +23,7 @@ def read_config() -> Dict[str, Any]:
 
 
 CONFIG = read_config()
+GAMES = list(CONFIG['games'].keys())
 
 
 def add_game(game: str, source: str, clean_restore: bool = False):
@@ -34,7 +35,7 @@ def add_game(game: str, source: str, clean_restore: bool = False):
 
 def get_game_dirs(game: str) -> Tuple[Path, Path]:
     """Get the source and backup directories for the given game"""
-    source_dir = CONFIG['games'].get(game).get('source')
+    source_dir = CONFIG['games'].get(game, {}).get('source')
     if not source_dir:
         raise ValueError(f'Game {game} not configured')
 
@@ -66,10 +67,10 @@ def list_game(game: str, extra_details: bool = False) -> Dict[str, str]:
         'Game': game,
         'Total backups': f'{len(backup_files)} ({get_dir_size(backup_dir)})',
         'Last saved': format_timestamp(metadata.get('last_save_time')),
-        'Last backed up': format_timestamp(metadata.get('last_backup_time')),
     }
 
     if extra_details:
+        game_info['Last backed up'] = format_timestamp(metadata.get('last_backup_time'))
         game_info['Source directory'] = source_pattern
         game_info['Backup directory'] = backup_dir
         formatted_files = [f'{i}:\t {f.name}' for i, f in enumerate(backup_files.keys())]

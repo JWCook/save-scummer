@@ -30,7 +30,7 @@ line usage.
 
 # Features
 * Just provide a save directory (or glob pattern) to configure a new game
-* Easily make snapshots, and restore them by most recent (default), time expressions
+* Easily make backups, and restore them by most recent (default), time expressions
   (like '1:30' for 'around an hour and a half ago'), or choose from a list
 * Tab autocompletion
 
@@ -55,13 +55,13 @@ Options:
 
 Commands:
   add      Add a game and its save directory
-  backup   Make a backup of the specified game
+  backup   Create a backup of one, multiple, or all games
   ls       List all currently configured games
   restore  Restore a backup of the specified game
 ```
 
 ## Add
-Use `ssc add` to add a game and its save directory.
+Use `ssc add` to add (or update) a game and its save directory.
 
 Relative paths, user paths, and [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming))
 are supported:
@@ -74,24 +74,44 @@ ssc add game2 'C:\Games\game2\*.sav'  # Add files ending in .sav
 ## Backup
 Use `ssc backup` to create a new backup. Just specify the game title, and an optional description:
 ```bash
-ssc backup game1 'level 10 with full health'
+ssc backup game1 --desc 'level 10 with full health'
+```
+Or just backup everything:
+```bash
+ssc backup --all
 ```
 
 ## List
 Use `ssc ls` to show a summary of all configured games:
 ```bash
-╒════════╤═════════════════╤═════════════════════════════════╤═════════════════════════════════╕
-│ Game   │ Total backups   │ Last saved                      │ Last backed up                  │
-╞════════╪═════════════════╪═════════════════════════════════╪═════════════════════════════════╡
-│ game1  │ 0               │ never                           │ never                           │
-├────────┼─────────────────┼─────────────────────────────────┼─────────────────────────────────┤
-│ game2  │ 10 (60.68 KB)   │ 2021-01-19 15:20 (23 hours ago) │ 2021-01-19 16:24 (22 hours ago) │
-╘════════╧═════════════════╧═════════════════════════════════╧═════════════════════════════════╛
+╒════════╤═════════════════╤═════════════════════════════════╕
+│ Game   │ Total backups   │ Last saved                      │
+╞════════╪═════════════════╪═════════════════════════════════╡
+│ game1  │ 0               │ never                           │
+├────────┼─────────────────┼─────────────────────────────────┤
+│ game2  │ 7 (94.96 KB)    │ 2021-01-19 15:20 (23 hours ago) │
+╘════════╧═════════════════╧═════════════════════════════════╛
 ```
 
-Use `ssc ls [game title]` to show more details on a specific game and its backups.
+Or use `ssc ls [game title]` to show more details on a specific game and its backups:
+```bash
+Game:               game2
+Total backups:      7 (94.96 KB)
+Last saved:         2021-01-19 15:20 (23 hours ago)
+Last backed up:     2021-01-19 16:24 (22 hours ago)
+Source directory:   /home/user/game2/saves
+Backup directory:   /home/user/.local/share/save-scummer/backups/game2
+Backup files: 	
+0:  game2-2021-01-26T19:23:26.zip
+1:  game2-2021-01-20T16:33:42-pre-restore.zip
+2:  game2-2021-01-19T19:26:10.zip
+3:  game2-2021-01-19T18:31:58.zip
+4:  game2-2021-01-18T12:17:52.zip
+5:  game2-2021-01-17T16:18:09.zip
+6:  game2-2021-01-17T15:01:58.zip
+```
 
-Note that "Last saved" is the time the original save files were created/modified.
+Note that "Last saved" is the time that the source files were created/modified.
 
 ## Restore
 
