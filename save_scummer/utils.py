@@ -1,4 +1,4 @@
-"""Misc utility functions"""
+"""Generic utility functions that don't depend on other modules"""
 from datetime import datetime, timedelta
 from dateutil.parser import parse as parse_date
 from os.path import getmtime

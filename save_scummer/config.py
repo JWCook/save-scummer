@@ -26,23 +26,23 @@ CONFIG = read_config()
 GAMES = list(CONFIG['games'].keys())
 
 
-def add_game(game: str, source: str, clean_restore: bool = False):
-    CONFIG['games'].setdefault(game, {})
-    CONFIG['games'][game]['source'] = source
-    CONFIG['games'][game]['clean_restore'] = clean_restore
+def add_game(title: str, source: str, clean_restore: bool = False):
+    CONFIG['games'].setdefault(title, {})
+    CONFIG['games'][title]['source'] = source
+    CONFIG['games'][title]['clean_restore'] = clean_restore
     write_config(CONFIG)
 
 
-def get_game_dirs(game: str) -> Tuple[Path, Path]:
+def get_game_dirs(title: str) -> Tuple[Path, Path]:
     """Get the source and backup directories for the given game"""
-    source_dir = CONFIG['games'].get(game, {}).get('source')
+    source_dir = CONFIG['games'].get(title, {}).get('source')
     if not source_dir:
-        raise ValueError(f'Game {game} not configured')
+        raise ValueError(f'Game {title} not configured')
 
     # Get custom backup directory, if different from default
     backup_base_dir = CONFIG.get('backup_dir') or DEFAULT_BACKUP_DIR
 
-    backup_dir = Path(backup_base_dir).joinpath(game)
+    backup_dir = Path(backup_base_dir).joinpath(title)
     backup_dir.mkdir(parents=True, exist_ok=True)
     return normalize_path(source_dir), normalize_path(backup_dir)
 
@@ -56,15 +56,15 @@ def list_games() -> List[Dict[str, str]]:
     return [list_game(game) for game in CONFIG['games']]
 
 
-def list_game(game: str, extra_details: bool = False) -> Dict[str, str]:
+def list_game(title: str, extra_details: bool = False) -> Dict[str, str]:
     """Get formatted info on a single game and its backups"""
-    metadata = CONFIG['games'][game]
-    source_pattern, backup_dir = get_game_dirs(game)
+    metadata = CONFIG['games'][title]
+    source_pattern, backup_dir = get_game_dirs(title)
     backup_files = get_dir_files_by_date(backup_dir)
 
     # Format backup size and date/time info
     game_info = {
-        'Game': game,
+        'Title': title,
         'Total backups': f'{len(backup_files)} ({get_dir_size(backup_dir)})',
         'Last saved': format_timestamp(metadata.get('last_save_time')),
     }
@@ -79,10 +79,10 @@ def list_game(game: str, extra_details: bool = False) -> Dict[str, str]:
     return game_info
 
 
-def update_metadata(game: str, last_save_time: datetime):
+def update_metadata(title: str, last_save_time: datetime):
     """Store metadata for a given game on the date/time of the last save (source) and backup"""
-    CONFIG['games'][game]['last_save_time'] = last_save_time.isoformat()
-    CONFIG['games'][game]['last_backup_time'] = datetime.now().isoformat()
+    CONFIG['games'][title]['last_save_time'] = last_save_time.isoformat()
+    CONFIG['games'][title]['last_backup_time'] = datetime.now().isoformat()
     write_config(CONFIG)
 
 

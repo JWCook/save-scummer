@@ -1,6 +1,7 @@
 from datetime import datetime
 from dateutil.parser import parse as parse_date
 from glob import glob
+from logging import getLogger
 from pathlib import Path
 from shutil import rmtree
 from typing import Dict, List, Tuple, Union
@@ -15,6 +16,8 @@ from save_scummer.utils import (
     get_latest_modified,
     normalize_path,
 )
+
+logger = getLogger(__name__)
 
 
 def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
@@ -33,43 +36,45 @@ def get_included_files(source_pattern: StrOrPath) -> List[Tuple[Path, Path]]:
     return [(path, path.relative_to(base_dir)) for path in abs_paths if str(path) != base_dir]
 
 
-def make_backup(game: str, short_desc: str = None) -> str:
+def make_backup(title: str, short_desc: str = None) -> str:
     """Make a backup for the specified game. Backup will be named using the time the last save
     was created, optionally with a short description.
 
     Returns:
         Status message
     """
-    source_pattern, backup_dir = get_game_dirs(game)
+    logger.info(f'Starting backup for {title}')
+    source_pattern, backup_dir = get_game_dirs(title)
     paths = get_included_files(source_pattern)
     if not paths:
         raise ValueError('No files are in the specified path')
 
     # Determine backup path & filename
     last_save_time = get_latest_modified([path[0] for path in paths])
-    if short_desc:
-        short_desc = '-' + short_desc.lower().replace(' ', '_')
-    archive_path = backup_dir.joinpath(f'{game}-{last_save_time.isoformat()}{short_desc or ""}.zip')
+    short_desc = '-' + short_desc.lower().replace(' ', '_') if short_desc else ''
+    archive_path = backup_dir.joinpath(f'{title}-{last_save_time.isoformat()}{short_desc}.zip')
 
-    # Write 'paths' inside archive relative to base (source) path
+    # Write paths inside archive relative to base (source) path
     with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as f:
         for abs_path, rel_path in paths:
-            # print(f'Writing {abs_path} -> {rel_path}')
+            logger.debug(f'Writing {abs_path} -> {rel_path}')
             f.write(abs_path, rel_path)
 
-    update_metadata(game, last_save_time)
+    update_metadata(title, last_save_time)
     archive_size = format_file_size(archive_path.stat().st_size)
-    return f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
+    msg = f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
+    logger.info(msg)
+    return msg
 
 
 def restore_backup(
-    game: str, filename: str = None, index: int = None, age: str = None, date: str = None
+    title: str, filename: str = None, index: int = None, age: str = None, date: str = None
 ) -> str:
     """Restore a backup matching the given specification(s).
     Makes a backup of current state before overwriting.
 
     Args:
-        game: Title of game
+        title: Title of game or application
         filename: Absolute or relative path to backup archive
         index: Index of backup to restore
         age: Min age of backup to restore (as a time expression string)
@@ -78,7 +83,8 @@ def restore_backup(
     Returns:
         Status message
     """
-    source_dir, backup_dir = get_game_dirs(game)
+    logger.info(f'Starting restore for {title}')
+    source_dir, backup_dir = get_game_dirs(title)
     backups = get_dir_files_by_date(backup_dir)
     backup_paths = list(backups.keys())
     n_backups = len(backup_paths)
@@ -98,14 +104,16 @@ def restore_backup(
     else:
         archive = backup_paths[0]
 
+    if not archive.is_absolute():
+        archive = backup_dir.joinpath(archive)
+    logger.info(f'Backup file selected: {archive}')
+
     # First backup current files before overwriting, and delete them if clean_restore is specified
-    make_backup(game, short_desc='pre-restore')
-    if CONFIG[game]['clean_restore']:
+    make_backup(title, short_desc='pre-restore')
+    if CONFIG[title]['clean_restore']:
         rmtree(source_dir)
 
     # Restore the selected backup
-    if not archive.is_absolute():
-        archive = backup_dir.joinpath(archive)
     source_dir.mkdir(parents=True, exist_ok=True)
     with ZipFile(archive) as f:
         f.extractall(source_dir)

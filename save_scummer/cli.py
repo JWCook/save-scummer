@@ -57,8 +57,8 @@ def ssc(ctx, install):
 
 
 @ssc.command()
-@click.argument('game', type=GameChoice)
-@click.argument('path')
+@click.argument('title')
+@click.argument('source')
 @click.option(
     '-c',
     '--clean-restore',
@@ -66,7 +66,7 @@ def ssc(ctx, install):
     help='Delete existing save files before restoring backups',
 )
 @click.pass_context
-def add(ctx, game: str, source: str, clean_restore):
+def add(ctx, title: str, source: str, clean_restore):
     """Add a game and its save directory.
     Relative paths, user paths, and glob patterns are supported.
     This command can also be used to update a previously added game.
@@ -90,17 +90,17 @@ def add(ctx, game: str, source: str, clean_restore):
         )
         click.confirm('Does this look correct?')
 
-    add_game(game, source=source, clean_restore=clean_restore)
-    click.echo(f'Source path for "{game}" added: {normalize_path(source)}')
+    add_game(title, source=source, clean_restore=clean_restore)
+    click.echo(f'Source path for "{title}" added: {normalize_path(source)}')
 
 
 @ssc.command()
-@click.argument('game', type=GameChoice, required=False)
-def ls(game):
+@click.argument('title', type=GameChoice, required=False)
+def ls(title):
     """List details on all configured games. Or, enter a game title to get more detailed info."""
-    if game:
+    if title:
         # TODO: alignment
-        game_info = list_game(game, extra_details=True)
+        game_info = list_game(title, extra_details=True)
         table = '\n'.join(f'{k}: \t{v}' for k, v in game_info.items())
     else:
         table = tabulate(list_games(), headers='keys', tablefmt='fancy_grid')
@@ -109,7 +109,7 @@ def ls(game):
 
 @ssc.command()
 @click.argument('titles', type=GameChoice, nargs=-1)
-@click.option('-d', '--desc', '--description', help='Optional description for this backup')
+@click.option('-d', '--description', help='Optional description for this backup')
 @click.option(
     '-a', '--all', help='Make a backup of all configured games', default=False, is_flag=True
 )
@@ -123,7 +123,7 @@ def backup(ctx, titles, description, all):
       ssc backup game1
       \b
       # Create a backup with a description
-      ssc backup game1 --desc 'level 10 with full health'
+      ssc backup game1 -d 'level 10 with full health'
       \b
       # Backup multiple games
       ssc backup game1 game2
@@ -145,7 +145,7 @@ def backup(ctx, titles, description, all):
 
 
 @ssc.command()
-@click.argument('game', type=GameChoice)
+@click.argument('title', type=GameChoice)
 @click.option(
     '-i', '--index', help='Backup number (starting at 0, from newest to oldest)', type=click.INT
 )
@@ -153,7 +153,7 @@ def backup(ctx, titles, description, all):
 @click.option('-d', '--date', help='Maximum date/time (absolute)')
 @click.option('-f', 'filename', help='Backup filename; either absolute or relative to backup dir')
 @click.pass_context
-def restore(ctx, game, filename, index, age, date):
+def restore(ctx, title, filename, index, age, date):
     """Restore a backup of the specified game.
     A specific backup can be indicated by backup index, age, date/time, or filename.
     Otherwise, the most recent backup is restored.
@@ -218,5 +218,5 @@ def restore(ctx, game, filename, index, age, date):
       ssc restore game1 -f game1-2021-01-20T00:09:10.zip
     """
     with spin(ctx, 'Restoring backup'):
-        status = restore_backup(game, filename, index, age, date)
+        status = restore_backup(title, filename, index, age, date)
     click.echo(status)

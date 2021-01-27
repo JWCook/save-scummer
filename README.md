@@ -31,7 +31,7 @@ line usage.
 # Features
 * Just provide a save directory (or glob pattern) to configure a new game
 * Easily make backups, and restore them by most recent (default), time expressions
-  (like '1:30' for 'around an hour and a half ago'), or choose from a list
+  (to indicate how far back in time you want to go), or choose from a list
 * Tab autocompletion
 
 # Installation
@@ -74,7 +74,7 @@ ssc add game2 'C:\Games\game2\*.sav'  # Add files ending in .sav
 ## Backup
 Use `ssc backup` to create a new backup. Just specify the game title, and an optional description:
 ```bash
-ssc backup game1 --desc 'level 10 with full health'
+ssc backup game1 -d 'level 10 with full health'
 ```
 Or just backup everything:
 ```bash
@@ -85,7 +85,7 @@ ssc backup --all
 Use `ssc ls` to show a summary of all configured games:
 ```bash
 ╒════════╤═════════════════╤═════════════════════════════════╕
-│ Game   │ Total backups   │ Last saved                      │
+│ Title  │ Total backups   │ Last saved                      │
 ╞════════╪═════════════════╪═════════════════════════════════╡
 │ game1  │ 0               │ never                           │
 ├────────┼─────────────────┼─────────────────────────────────┤
