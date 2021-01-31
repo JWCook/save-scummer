@@ -10,7 +10,7 @@ from save_scummer.utils import format_timestamp, get_dir_files_by_date, get_dir_
 DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
 CONFIG_PATH = DATA_DIR.joinpath('config.yml')
 DEFAULT_BACKUP_DIR = DATA_DIR.joinpath('backups')
-DEFAULT_CONFIG = {'games': {}}
+DEFAULT_CONFIG: Dict = {'games': {}}
 
 
 def read_config() -> Dict[str, Any]:
@@ -71,8 +71,8 @@ def list_game(title: str, extra_details: bool = False) -> Dict[str, str]:
 
     if extra_details:
         game_info['Last backed up'] = format_timestamp(metadata.get('last_backup_time'))
-        game_info['Source directory'] = source_pattern
-        game_info['Backup directory'] = backup_dir
+        game_info['Source directory'] = str(source_pattern)
+        game_info['Backup directory'] = str(backup_dir)
         formatted_files = [f'{i}:\t {f.name}' for i, f in enumerate(backup_files.keys())]
         game_info['Backup files'] = '\n' + '\n'.join(formatted_files)
 

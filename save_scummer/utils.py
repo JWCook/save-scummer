@@ -22,15 +22,16 @@ def format_file_size(n_bytes: int) -> str:
     return f'{filesize:.2f} {unit}'
 
 
-def format_timestamp(timestamp: str) -> str:
+def format_timestamp(dt: Union[str, datetime]) -> str:
     """Reformat a datetime string into a common format, along with time elapsed since that time.
 
     Time elapsed is in human-readable form, e.g. "5 minutes ago" or "2 days ago."
     Adapted from: https://stackoverflow.com/a/1551394
     """
-    if not timestamp:
+    if not dt:
         return 'never'
-    dt = parse_date(timestamp)
+    if not isinstance(dt, datetime):
+        dt = parse_date(dt)
     diff = datetime.now() - dt
 
     if diff.days == 0:
@@ -53,12 +54,12 @@ def get_datetime_by_age(age: str) -> datetime:
     return datetime.now() - age_delta
 
 
-def get_dir_files_by_date(path: Path = None) -> Dict[Path, datetime]:
+def get_dir_files_by_date(path: Path) -> Dict[Path, datetime]:
     """Get all files in the specified directory, sorted by creation date (desc),
     along with the parsed datetime.
     """
     try:
-        files = list(Path(path).iterdir())
+        files = list(path.iterdir())
     except IOError:
         return {}
     files = sorted(files, key=getmtime, reverse=True)

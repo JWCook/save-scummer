@@ -11,6 +11,7 @@ from save_scummer.config import CONFIG, get_game_dirs, update_metadata
 from save_scummer.utils import (
     StrOrPath,
     format_file_size,
+    format_timestamp,
     get_datetime_by_age,
     get_dir_files_by_date,
     get_latest_modified,
@@ -62,7 +63,10 @@ def make_backup(title: str, short_desc: str = None) -> str:
 
     update_metadata(title, last_save_time)
     archive_size = format_file_size(archive_path.stat().st_size)
-    msg = f'Backed up {len(paths)} files to {archive_path} ({archive_size})'
+    msg = (
+        f'Backing up {len(paths)} files saved {format_timestamp(last_save_time)}.\n'
+        f'Backup created: {archive_path} ({archive_size}).'
+    )
     logger.info(msg)
     return msg
 
@@ -110,7 +114,7 @@ def restore_backup(
 
     # First backup current files before overwriting, and delete them if clean_restore is specified
     make_backup(title, short_desc='pre-restore')
-    if CONFIG[title]['clean_restore']:
+    if CONFIG['games'][title].get('clean_restore') is True:
         rmtree(source_dir)
 
     # Restore the selected backup
