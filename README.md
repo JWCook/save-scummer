@@ -36,8 +36,7 @@ line usage.
 
 # Installation
 ```bash
-# Not yet on pypi; will be published when at least basic functionality is working 
-pip install https://github.com/JWCook/save-scummer
+pip install save-scummer
 ```
 
 ## Autocompletion (optional)
@@ -101,7 +100,7 @@ Last saved:         2021-01-19 15:20 (23 hours ago)
 Last backed up:     2021-01-19 16:24 (22 hours ago)
 Source directory:   /home/user/game2/saves
 Backup directory:   /home/user/.local/share/save-scummer/backups/game2
-Backup files: 	
+Backup files:
 0:  game2-2021-01-26T19:23:26.zip
 1:  game2-2021-01-20T16:33:42-pre-restore.zip
 2:  game2-2021-01-19T19:26:10.zip
@@ -141,7 +140,7 @@ See `ls` command for full list of available backups.
 **Age:**
 Minimum age of the save to restore, e.g **"I want to go back in time by 1 hour."**
 Amounts of time can be specified in 'HH:MM' format, or with a number followed by a unit.
-Examples: 
+Examples:
 * '1:30' (an hour and a half ago)
 * '30m' (or '30 minutes')
 * '6h' (or '6 hours')

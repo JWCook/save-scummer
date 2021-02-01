@@ -17,7 +17,10 @@ setup(
         'tabulate',
         'watchdog',
     ],
-    extras_require={'dev': ['black', 'isort', 'flake8', 'mypy']},
+    extras_require={
+        'dev': ['black', 'isort', 'flake8', 'mypy', 'pre-commit', 'pytest', 'pytest-cov'],
+        'build': ['coveralls', 'twine', 'wheel'],
+    },
     entry_points={
         'console_scripts': ['save-scummer=save_scummer.cli:ssc', 'ssc=save_scummer.cli:ssc'],
     },
