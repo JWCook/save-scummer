@@ -18,6 +18,7 @@ from save_scummer.utils import (
     normalize_path,
 )
 
+AUTOSAVE_SUFFIX = 'pre-restore'
 logger = getLogger(__name__)
 
 
@@ -89,7 +90,11 @@ def restore_backup(
     """
     logger.info(f'Starting restore for {title}')
     source_dir, backup_dir = get_game_dirs(title)
+
+    # Get backup files, excluding 'pre-restore' backups
+    # TODO: A less confusing way to handle or document this behavior
     backups = get_dir_files_by_date(backup_dir)
+    backups = {k: v for k, v in backups.items() if AUTOSAVE_SUFFIX not in str(k)}
     backup_paths = list(backups.keys())
     n_backups = len(backup_paths)
 
@@ -113,7 +118,7 @@ def restore_backup(
     logger.info(f'Backup file selected: {archive}')
 
     # First backup current files before overwriting, and delete them if clean_restore is specified
-    make_backup(title, short_desc='pre-restore')
+    make_backup(title, short_desc=AUTOSAVE_SUFFIX)
     if CONFIG['games'][title].get('clean_restore') is True:
         rmtree(source_dir)
 
