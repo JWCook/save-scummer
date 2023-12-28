@@ -6,6 +6,7 @@ from pathlib import Path
 from shutil import rmtree
 from typing import Dict, List, Tuple, Union
 from zipfile import ZIP_DEFLATED, ZipFile
+from slugify import slugify
 
 from save_scummer.config import CONFIG, get_game_dirs, update_metadata
 from save_scummer.utils import (
@@ -53,8 +54,8 @@ def make_backup(title: str, short_desc: str = None) -> str:
 
     # Determine backup path & filename
     last_save_time = get_latest_modified([path[0] for path in paths])
-    short_desc = '-' + short_desc.lower().replace(' ', '_') if short_desc else ''
-    archive_path = backup_dir.joinpath(f'{title}-{last_save_time.isoformat()}{short_desc}.zip')
+    short_desc = '-' + short_desc if short_desc else ''
+    archive_path = backup_dir / (slugify(f'{title}-{last_save_time.isoformat()}{short_desc}', lowercase=False) + '.zip')
 
     # Write paths inside archive relative to base (source) path
     with ZipFile(archive_path, 'w', compression=ZIP_DEFLATED) as f:
