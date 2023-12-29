@@ -9,9 +9,9 @@ from halo import Halo
 from tabulate import tabulate
 
 from save_scummer.backup import get_included_files, make_backup, restore_backup
-from save_scummer.config import GAMES, add_game, list_game, list_games, normalize_path
+from save_scummer.config import LOG_PATH, GAMES, add_game, list_game, list_games, normalize_path
 
-basicConfig(filename='save-scummer.log', level='INFO')
+basicConfig(filename=LOG_PATH, level='INFO')
 init_completion()
 logger = getLogger(__name__)
 
@@ -111,7 +111,11 @@ def ls(title):
 @click.argument('titles', type=GameChoice, nargs=-1)
 @click.option('-d', '--description', help='Optional description for this backup')
 @click.option(
-    '-a', '--all', help='Make a backup of all configured games', default=False, is_flag=True
+    '-a',
+    '--all',
+    help='Make a backup of all configured games',
+    default=False,
+    is_flag=True,
 )
 @click.pass_context
 def backup(ctx, titles, description, all):

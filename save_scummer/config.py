@@ -7,9 +7,10 @@ from platformdirs import user_data_dir
 
 from save_scummer.utils import format_timestamp, get_dir_files_by_date, get_dir_size, normalize_path
 
-DATA_DIR = Path(user_data_dir()).joinpath('save-scummer')
-CONFIG_PATH = DATA_DIR.joinpath('config.yml')
-DEFAULT_BACKUP_DIR = DATA_DIR.joinpath('backups')
+DATA_DIR = Path(user_data_dir()) / 'save-scummer'
+CONFIG_PATH = DATA_DIR / 'config.yml'
+LOG_PATH = DATA_DIR / 'save-scummer.log'
+DEFAULT_BACKUP_DIR = DATA_DIR / 'backups'
 DEFAULT_CONFIG: Dict = {'games': {}}
 
 
