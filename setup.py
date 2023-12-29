@@ -12,6 +12,7 @@ setup(
         'click-completion',
         'halo',
         'python-dateutil',
+        'python-slugify',
         'pytimeparse',
         'pyyaml>=5.0',
         'tabulate',
