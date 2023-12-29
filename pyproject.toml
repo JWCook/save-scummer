@@ -4,7 +4,7 @@ version = '0.1.0'
 authors = [{name = 'Jordan Cook'}]
 description = 'A simple CLI utility to backup and restore game saves'
 readme = 'README.md'
-requires-python = '>=3.6'
+requires-python = '>=3.7'
 license = 'MIT'
 keywords = ['backup', 'restore', 'save', 'game', 'roguelike', 'roguelite']
 classifiers = [
