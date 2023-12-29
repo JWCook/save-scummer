@@ -1,5 +1,8 @@
 # TODO
+Possible feature ideas:
 
+* Global ignore glob patterns
+* Per-game ignore glob patterns
 * Option to restore to a specified directory instead of source dir
 * Option to change backup directory
     * Mainly for cloud storage sync (Google Drive, Nextcloud, etc.)
@@ -14,4 +17,4 @@
 * `autobackup` or `watch` command: Watch source directory, save at regular intervals (if any files changed),
   until canceled
   * Use `watchdog`
-  * `autobackup -a/--all` option to monitor all game dirs 
+  * `autobackup -a/--all` option to monitor all game dirs

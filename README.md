@@ -1,5 +1,8 @@
 # Save Scummer
-**WIP / Incomplete!**
+
+[![Build](https://github.com/JWCook/save-scummer/workflows/Build/badge.svg?branch=main)](https://github.com/JWCook/save-scummer/actions)
+[![PyPI](https://img.shields.io/pypi/v/save-scummer?color=blue)](https://pypi.org/project/save-scummer)
+[![PyPI - Python Versions](https://img.shields.io/pypi/pyversions/save-scummer)](https://pypi.org/project/save-scummer)
 
 * [Features](#features)
 * [Installation](#installation)
@@ -14,19 +17,18 @@
 
 
 Save-Scummer is a simple CLI utility to backup and restore game saves.
-This was originally intended for rogue-lite games like **Rogue Legacy**, **FTL** and **Don't Starve**,
-but it could also be easily applied to other games or non-game applications.
+This is intended for rogue-lite games like **Rogue Legacy**, **FTL** and **Don't Starve**,
+but it could also be applied to other games or non-game applications.
 
 I made this because I enjoy roguelike/rogue-lite games, but when one starts to get too difficult,
 I may resort to [save-scumming](https://tvtropes.org/pmwiki/pmwiki.php/Main/SaveScumming) as an
 option to make the game a bit easier. When doing that manually, I find myself wasting precious _seconds_
-of time copying files back and forth, so naturally I decided to waste hours making it (semi-)automated
+of time copying files back and forth, so naturally I decided to waste _hours_ making it (semi-)automated
 instead.
 
 A full backup utility (like [Duplicati](https://github.com/duplicati/duplicati)) or sync utility
 (like [rsync](https://github.com/WayneD/rsync)) will obviously have _many_ more features, but for the
-relatively basic case of handling game saves, I wanted something simpler with more concise command
-line usage.
+basic case of handling game saves, I wanted something simpler with concise command line usage.
 
 # Features
 * Just provide a save directory (or glob pattern) to configure a new game
@@ -35,19 +37,28 @@ line usage.
 * Tab autocompletion
 
 # Installation
-```bash
+Install with [pipx](https://pipx.pypa.io/stable/) (recommended):
+```sh
+pipx install save-scummer
+```
+
+Or with pip:
+```sh
 pip install save-scummer
 ```
 
 ## Autocompletion (optional)
 Tab autocompletion is available for most common shells: **bash, fish, zsh** and Windows **PowerShell**.
-To install, just run `ssc --install [shell name]`
+To install, run:
+```sh
+ssc --install [shell name]
+``````
 
 # Usage
 Save-scummer provides the command `save-scummer` (also aliased as `ssc`) with the following subcommands:
 
-```bash
-Usage: ssc COMMAND [ARGS]...
+```sh
+sh: ssc COMMAND [ARGS]...
 
 Options:
   --help  Show this message and exit.
@@ -64,7 +75,7 @@ Use `ssc add` to add (or update) a game and its save directory.
 
 Relative paths, user paths, and [glob patterns](https://en.wikipedia.org/wiki/Glob_(programming))
 are supported:
-```bash
+```sh
 ssc add game1 ~/Games/game1           # Add a dir (including any subdirs)
 ssc add game1 '~/Games/game1/**'      # Equivalent glob pattern (quotes required)
 ssc add game2 'C:\Games\game2\*.sav'  # Add files ending in .sav
@@ -72,17 +83,17 @@ ssc add game2 'C:\Games\game2\*.sav'  # Add files ending in .sav
 
 ## Backup
 Use `ssc backup` to create a new backup. Just specify the game title, and an optional description:
-```bash
+```sh
 ssc backup game1 -d 'level 10 with full health'
 ```
 Or just backup everything:
-```bash
+```sh
 ssc backup --all
 ```
 
 ## List
 Use `ssc ls` to show a summary of all configured games:
-```bash
+```sh
 ╒════════╤═════════════════╤═════════════════════════════════╕
 │ Title  │ Total backups   │ Last saved                      │
 ╞════════╪═════════════════╪═════════════════════════════════╡
@@ -93,7 +104,7 @@ Use `ssc ls` to show a summary of all configured games:
 ```
 
 Or use `ssc ls [game title]` to show more details on a specific game and its backups:
-```bash
+```sh
 Game:               game2
 Total backups:      7 (94.96 KB)
 Last saved:         2021-01-19 15:20 (23 hours ago)
@@ -117,15 +128,14 @@ Note that "Last saved" is the time that the source files were created/modified.
 Use `ssc restore` to restore a backup. A specific backup can be indicated by backup
  **index, age, date/time, or filename**. Otherwise, the most recent backup is restored.
 
-```bash
+```sh
 Usage: ssc restore [OPTIONS] [TITLE]
 
 Options:
   -i, --index INTEGER  Backup number (starting at 0, from newest to oldest)
   -a, --age TEXT       Minimum age (relative to current time)
   -d, --date TEXT      Maximum date/time (absolute)
-  -f TEXT              Backup filename; either absolute or relative to backup
-                       dir
+  -f TEXT              Backup filename; either absolute or relative to backup dir
 ```
 
 ### Backup specifiers
@@ -164,7 +174,7 @@ Either a full path or just the filename (relative to the backup dir)
 
 ### Restore Examples
 
-```bash
+```sh
 # Just restore the most recent backup
 ssc restore game1
 
@@ -185,4 +195,16 @@ ssc restore game1 -d 'Mar 22 2021'
 
 # Restore a backup by filename
 ssc restore game1 -f game1-2021-01-20T00:09:10.zip
+```
+
+# Development setup
+To set up for local development:
+```sh
+git clone https://github.com/JWCook/save-scummer && cd save-scummer
+pip install -Ue '.[dev]'
+```
+
+To run linting, formatting, etc.:
+```sh
+pre-commit run -a
 ```
