@@ -14,11 +14,12 @@ classifiers = [
     'Programming Language :: Python :: 3',
 ]
 dependencies = [
-    'appdirs',
     'click>=7.0',
     'click-completion',
     'halo',
+    'platformdirs',
     'python-dateutil',
+    'python-slugify',
     'pytimeparse',
     'pyyaml>=5.0',
     'tabulate',

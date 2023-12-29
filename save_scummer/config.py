@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Tuple
 
 import yaml
-from appdirs import user_data_dir
+from platformdirs import user_data_dir
 
 from save_scummer.utils import format_timestamp, get_dir_files_by_date, get_dir_size, normalize_path
 
