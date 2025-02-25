@@ -1,6 +1,6 @@
 # Save Scummer
 
-[![Build](https://github.com/JWCook/save-scummer/workflows/Build/badge.svg?branch=main)](https://github.com/JWCook/save-scummer/actions)
+[![Build](https://github.com/JWCook/save-scummer/actions/workflows/build.yml/badge.svg)](https://github.com/JWCook/save-scummer/actions)
 [![PyPI](https://img.shields.io/pypi/v/save-scummer?color=blue)](https://pypi.org/project/save-scummer)
 [![PyPI - Python Versions](https://img.shields.io/pypi/pyversions/save-scummer)](https://pypi.org/project/save-scummer)
 
