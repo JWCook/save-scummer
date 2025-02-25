@@ -37,9 +37,9 @@ basic case of handling game saves, I wanted something simpler with concise comma
 * Tab autocompletion
 
 # Installation
-Install with [pipx](https://pipx.pypa.io/stable/) (recommended):
+Install with [uv](https://docs.astral.sh/uv) (recommended):
 ```sh
-pipx install save-scummer
+uv tool install save-scummer
 ```
 
 Or with pip:
@@ -198,10 +198,10 @@ ssc restore game1 -f game1-2021-01-20T00:09:10.zip
 ```
 
 # Development setup
-To set up for local development:
+To set up for local development (requires [uv](https://docs.astral.sh/uv/getting-started/installation/)):
 ```sh
 git clone https://github.com/JWCook/save-scummer && cd save-scummer
-pip install -Ue '.[dev]'
+uv sync --frozen
 ```
 
 To run linting, formatting, etc.:

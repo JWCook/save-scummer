@@ -24,23 +24,24 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      # Cache packages per python version, and reuse until pyproject.toml changes
-      - name: Cache pip packages
-        id: cache
-        uses: actions/cache@v3
+      # Install dependencies, with caching
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ matrix.python-version }}-${{ hashFiles('pyproject.toml') }}
-          restore-keys: ${{ runner.os }}-pip-${{ matrix.python-version }}
-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
       - name: Install dependencies
-        run: pip install ".[dev]"
+        run: |
+          uv python install ${{ matrix.python-version }}
+          uv sync --frozen
+
       - name: Run unit tests
-        run: pytest
+        run: uv run pytest
       # Really basic test script just to make sure nothing blows up
       # TODO: Actual unit tests using click.testing.CliRunner
       - name: Run smoke tests
         run: |
+          source .venv/bin/activate
           mkdir -p ./tmp/dir_1/dir_2
           touch ./tmp/file_1
           touch ./tmp/dir_1/file_2
@@ -69,7 +70,7 @@ jobs:
         with:
           python-version: ${{ env.LATEST_PY_VERSION }}
       - name: Run style checks and linting via pre-commit hooks
-        uses: pre-commit/action@v3.0.0
+        uses: pre-commit/action@v3.0.1
 
   # Deploy for tags only
   release:
@@ -80,13 +81,10 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.LATEST_PY_VERSION }}
-
+      - uses: astral-sh/setup-uv@v5
       - name: Install dependencies
-        run: pip install hatch
+        run: uv python install ${{ env.LATEST_PY_VERSION }}
       - name: Build package distributions
-        run: hatch build
+        run: uv build
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

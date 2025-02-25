@@ -1,6 +1,6 @@
 [project]
 name = 'save-scummer'
-version = '0.1.0'
+version = '0.1.1'
 authors = [{name = 'Jordan Cook'}]
 description = 'A simple CLI utility to backup and restore game saves'
 readme = 'README.md'
@@ -24,7 +24,9 @@ dependencies = [
     'pyyaml>=5.0',
     'tabulate',
 ]
-optional-dependencies.dev = ['pytest', 'pre-commit']
+
+[dependency-groups]
+dev = ['pytest', 'pre-commit']
 
 [project.urls]
 'Source code' = 'https://github.com/JWCook/save-scummer'
@@ -55,12 +57,14 @@ exclude = 'dist|build'
 [tool.ruff]
 line-length = 100
 output-format = 'grouped'
-select = ['B', 'C4','C90', 'E', 'F']
-ignore = ['B023', 'B027']
 target-version = 'py38'
 
 [tool.ruff.format]
 quote-style = 'single'
+
+[tool.ruff.lint]
+select = ['B', 'C4','C90', 'E', 'F']
+ignore = ['B023', 'B027']
 
 [tool.ruff.lint.isort]
 known-first-party = ['test']
